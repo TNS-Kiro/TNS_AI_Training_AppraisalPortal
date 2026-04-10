@@ -34,13 +34,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         // Session expired or not authenticated - redirect to login
         console.warn('Session expired or unauthorized. Redirecting to login.');
-        
+
         const isSessionExpired = error.error?.message?.includes('Session expired');
         if (isSessionExpired) {
           console.warn('Session expired due to inactivity');
         }
-        
-        router.navigate(['/login'], { 
+
+        router.navigate(['/login'], {
           queryParams: { sessionExpired: isSessionExpired ? 'true' : 'false' }
         });
       } else if (error.status === 403) {
