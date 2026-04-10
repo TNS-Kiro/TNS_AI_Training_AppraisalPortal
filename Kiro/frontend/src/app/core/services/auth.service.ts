@@ -35,10 +35,10 @@ export class AuthService {
   }
 
   /**
-   * Login with email and password
+   * Login with employee ID and password
    */
-  login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
+  login(employeeId: string, password: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.API_URL}/login`, { employeeId, password }).pipe(
       tap(response => this.currentUserSubject.next(response.user))
     );
   }

@@ -48,8 +48,8 @@ export class SidebarComponent {
     if (!this.user) return [];
     
     const userRoles = this.user.roles.map(r => r.name);
-    return this.menuItems.filter(item => 
-      item.roles.some(role => userRoles.includes(role))
+    return this.menuItems.filter(item =>
+      item.roles.some(role => userRoles.includes(role as any))
     );
   }
 }

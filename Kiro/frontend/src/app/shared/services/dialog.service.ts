@@ -15,24 +15,29 @@ export class DialogService {
   /**
    * Show a confirmation dialog
    */
-  confirm(data: ConfirmDialogData): Observable<boolean> {
+  confirm(
+    title: string,
+    message: string,
+    confirmText = 'Confirm',
+    cancelText = 'Cancel'
+  ): Promise<boolean> {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data
+      data: {
+        title,
+        message,
+        confirmText,
+        cancelText
+      }
     });
 
-    return dialogRef.afterClosed();
+    return dialogRef.afterClosed().toPromise().then(result => result === true);
   }
 
   /**
    * Show a simple confirmation with default text
    */
-  confirmAction(message: string, title = 'Confirm Action'): Observable<boolean> {
-    return this.confirm({
-      title,
-      message,
-      confirmText: 'Confirm',
-      cancelText: 'Cancel'
-    });
+  confirmAction(message: string, title = 'Confirm Action'): Promise<boolean> {
+    return this.confirm(title, message, 'Confirm', 'Cancel');
   }
 }
