@@ -250,7 +250,7 @@ export class AssignBackupReviewerDialogComponent implements OnInit {
         // Filter to only managers and HR users, exclude the primary manager
         this.availableReviewers = users.filter(user => {
           const hasManagerOrHRRole = user.roles.some(role => 
-            role.name === 'MANAGER' || role.name === 'HR'
+            role === 'MANAGER' || role === 'HR'
           );
           const isNotPrimaryManager = user.id !== this.data.form.managerId;
           return hasManagerOrHRRole && isNotPrimaryManager;

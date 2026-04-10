@@ -9,6 +9,34 @@ export interface UserSearchParams {
   search?: string;
   department?: string;
   isActive?: boolean;
+  role?: string;
+  status?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface UserCreateRequest {
+  employeeId: string;
+  fullName: string;
+  email: string;
+  password: string;
+  designation?: string;
+  department?: string;
+  managerId?: number | null;
+  roles?: string[];
+}
+
+export interface UserUpdateRequest {
+  fullName?: string;
+  email?: string;
+  designation?: string;
+  department?: string;
+  managerId?: number | null;
+}
+
+export interface RoleDto {
+  id: number;
+  name: string;
 }
 
 /**
@@ -36,6 +64,18 @@ export class UserService {
     }
     if (params?.isActive !== undefined) {
       httpParams = httpParams.set('isActive', params.isActive.toString());
+    }
+    if (params?.role) {
+      httpParams = httpParams.set('role', params.role);
+    }
+    if (params?.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.page !== undefined) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+    if (params?.size !== undefined) {
+      httpParams = httpParams.set('size', params.size.toString());
     }
 
     return this.http.get<ApiResponse<User[]>>(this.API_URL, { params: httpParams });
@@ -70,9 +110,23 @@ export class UserService {
   }
 
   /**
+   * Reactivate user
+   */
+  reactivateUser(id: number): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(`${this.API_URL}/${id}/reactivate`, {});
+  }
+
+  /**
    * Assign roles to user
    */
-  assignRoles(userId: number, roleIds: number[]): Observable<ApiResponse<User>> {
-    return this.http.put<ApiResponse<User>>(`${this.API_URL}/${userId}/roles`, { roleIds });
+  assignRoles(userId: number, roleNames: string[]): Observable<ApiResponse<User>> {
+    return this.http.put<ApiResponse<User>>(`${this.API_URL}/${userId}/roles`, { roleNames });
+  }
+
+  /**
+   * Get all available roles
+   */
+  getRoles(): Observable<ApiResponse<RoleDto[]>> {
+    return this.http.get<ApiResponse<RoleDto[]>>(`${environment.apiUrl}/roles`);
   }
 }

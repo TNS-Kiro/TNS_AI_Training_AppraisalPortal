@@ -83,7 +83,7 @@ export class UserFormDialogComponent implements OnInit {
   loadManagers(): void {
     this.userService.getUsers({ role: 'MANAGER', size: 100 }).subscribe({
       next: (response) => {
-        this.availableManagers = response.content;
+        this.availableManagers = response.data || [];
         this.cdr.markForCheck();
       },
       error: () => {

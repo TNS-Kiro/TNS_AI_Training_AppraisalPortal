@@ -103,10 +103,10 @@ export class UserManagementDashboardComponent implements OnInit {
     this.userService.getUsers(params).subscribe({
       next: (response) => {
         console.log('Users response:', response);
-        console.log('Content:', response.content);
-        console.log('Users array length:', response.content?.length);
-        this.users = response.content || [];
-        this.totalUsers = response.totalElements || 0;
+        console.log('Content:', response.data);
+        console.log('Users array length:', response.data?.length);
+        this.users = response.data || [];
+        this.totalUsers = response.data?.length || 0;
         this.isLoading = false;
         this.cdr.detectChanges();
       },

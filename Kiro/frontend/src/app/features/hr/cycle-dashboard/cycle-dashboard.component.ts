@@ -65,7 +65,7 @@ export class CycleDashboardComponent implements OnInit {
 
     this.dashboardService.getHRDashboard().subscribe({
       next: (response) => {
-        this.dashboardData = response.data || null;
+        this.dashboardData = response || null;
         this.loading = false;
       },
       error: (err) => {

@@ -84,7 +84,7 @@ export class TemplateListComponent implements OnInit {
   activateTemplate(template: AppraisalTemplate): void {
     const message = `Are you sure you want to activate template version ${template.version}? This will deactivate all other templates.`;
     
-    this.dialogService.confirmAction(message, 'Activate Template').subscribe(confirmed => {
+    this.dialogService.confirmAction(message, 'Activate Template').then(confirmed => {
       if (confirmed) {
         this.templateService.activateTemplate(template.id).subscribe({
           next: (response) => {
@@ -106,7 +106,7 @@ export class TemplateListComponent implements OnInit {
   deactivateTemplate(template: AppraisalTemplate): void {
     const message = `Are you sure you want to deactivate template version ${template.version}?`;
     
-    this.dialogService.confirmAction(message, 'Deactivate Template').subscribe(confirmed => {
+    this.dialogService.confirmAction(message, 'Deactivate Template').then(confirmed => {
       if (confirmed) {
         this.templateService.deactivateTemplate(template.id).subscribe({
           next: (response) => {

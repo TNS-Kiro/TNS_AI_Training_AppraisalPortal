@@ -52,7 +52,8 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.login(this.loginForm.value).subscribe({
+    const { loginIdentifier, password } = this.loginForm.value;
+    this.authService.login(loginIdentifier, password).subscribe({
       next: (user) => {
         this.isLoading = false;
         // Navigate based on user role

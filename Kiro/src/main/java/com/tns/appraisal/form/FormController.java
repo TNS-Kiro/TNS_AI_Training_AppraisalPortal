@@ -4,7 +4,6 @@ import com.tns.appraisal.common.dto.ApiResponse;
 import com.tns.appraisal.form.dto.FormDetailDto;
 import com.tns.appraisal.form.dto.FormSummaryDto;
 import com.tns.appraisal.form.dto.SaveDraftRequest;
-import com.tns.appraisal.form.dto.SaveReviewDraftRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -131,25 +130,6 @@ public class FormController {
         Long userId = getUserId(auth);
         FormDetailDto dto = formService.submitForm(id, userId);
         return ResponseEntity.ok(ApiResponse.success("Form submitted successfully", dto));
-    }
-
-    // -------------------------------------------------------------------------
-    // PUT /api/forms/{id}/review/draft  – MANAGER: save review draft
-    // -------------------------------------------------------------------------
-
-    /**
-     * Saves the manager's review as a draft.
-     * Transitions SUBMITTED → UNDER_REVIEW on first save, then → REVIEW_DRAFT_SAVED.
-     */
-    @PutMapping("/{id}/review/draft")
-    @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<ApiResponse<FormDetailDto>> saveReviewDraft(
-            @PathVariable Long id,
-            @RequestBody SaveReviewDraftRequest request,
-            Authentication auth) {
-        Long userId = getUserId(auth);
-        FormDetailDto dto = formService.saveReviewDraft(id, request, userId);
-        return ResponseEntity.ok(ApiResponse.success("Review draft saved successfully", dto));
     }
 
     // -------------------------------------------------------------------------
