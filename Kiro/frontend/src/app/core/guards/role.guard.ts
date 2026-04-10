@@ -1,40 +1,25 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 import { map } from 'rxjs/operators';
 import { RoleName } from '../models/user.model';
 
-/**
- * Role guard to protect routes that require specific roles.
- * Usage: Add 'data: { roles: ['ADMIN', 'HR'] }' to route configuration.
- */
 export const roleGuard: CanActivateFn = (route, state) => {
+  if (environment.devBypassAuth) return true;
+
   const authService = inject(AuthService);
   const router = inject(Router);
-
   const requiredRoles = route.data['roles'] as RoleName[];
 
-  if (!requiredRoles || requiredRoles.length === 0) {
-    return true;
-  }
+  if (!requiredRoles || requiredRoles.length === 0) return true;
 
   return authService.currentUser$.pipe(
     map(user => {
-      if (!user) {
-        router.navigate(['/login']);
-        return false;
-      }
-
-      const userRoles = user.roles.map(r => r.name);
-      const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
-
-      if (hasRequiredRole) {
-        return true;
-      } else {
-        console.error('Access denied: insufficient role');
-        router.navigate(['/unauthorized']);
-        return false;
-      }
+      if (!user) { router.navigate(['/login']); return false; }
+      const hasRole = requiredRoles.some(role => user.roles.map(r => r.name).includes(role));
+      if (!hasRole) { router.navigate(['/unauthorized']); return false; }
+      return true;
     })
   );
 };

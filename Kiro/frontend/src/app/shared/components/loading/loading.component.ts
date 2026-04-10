@@ -1,15 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 @Component({
   selector: 'app-loading',
   standalone: true,
-  imports: [CommonModule, MatProgressSpinnerModule],
+  imports: [CommonModule, ProgressSpinnerModule],
   template: `
     @if (isLoading) {
       <div class="loading-overlay">
-        <mat-spinner [diameter]="diameter"></mat-spinner>
+        <p-progressSpinner [style]="{ width: diameter + 'px', height: diameter + 'px' }"></p-progressSpinner>
         @if (message) {
           <p class="loading-message">{{ message }}</p>
         }
@@ -26,7 +26,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     }
     .loading-message {
       margin-top: 16px;
-      color: rgba(0, 0, 0, 0.54);
+      color: #6c757d;
     }
   `]
 })

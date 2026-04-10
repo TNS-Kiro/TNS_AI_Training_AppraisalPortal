@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService as PrimeDialogService } from 'primeng/dynamicdialog';
 import { Observable } from 'rxjs';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../components/confirm-dialog/confirm-dialog.component';
 
@@ -10,18 +10,24 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../components/confirm
   providedIn: 'root'
 })
 export class DialogService {
-  constructor(private dialog: MatDialog) {}
+  constructor(private dialogService: PrimeDialogService) {}
 
   /**
    * Show a confirmation dialog
    */
   confirm(data: ConfirmDialogData): Observable<boolean> {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    const ref = this.dialogService.open(ConfirmDialogComponent, {
+      header: data.title,
       width: '400px',
       data
     });
 
-    return dialogRef.afterClosed();
+    return new Observable(observer => {
+      ref.onClose.subscribe((result: boolean) => {
+        observer.next(result || false);
+        observer.complete();
+      });
+    });
   }
 
   /**
