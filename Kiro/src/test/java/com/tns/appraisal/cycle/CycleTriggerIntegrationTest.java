@@ -2,6 +2,7 @@ package com.tns.appraisal.cycle;
 
 import com.tns.appraisal.audit.AuditLog;
 import com.tns.appraisal.audit.AuditLogRepository;
+import com.tns.appraisal.form.AppraisalFormRepository;
 import com.tns.appraisal.template.AppraisalTemplate;
 import com.tns.appraisal.template.AppraisalTemplateRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,9 @@ class CycleTriggerIntegrationTest {
 
     @Autowired
     private AppraisalTemplateRepository templateRepository;
+
+    @Autowired
+    private AppraisalFormRepository formRepository;
 
     @Autowired
     private AuditLogRepository auditLogRepository;

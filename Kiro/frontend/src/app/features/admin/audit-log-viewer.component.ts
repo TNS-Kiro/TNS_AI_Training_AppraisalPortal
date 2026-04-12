@@ -114,8 +114,8 @@ export class AuditLogViewerComponent implements OnInit {
 
     this.auditService.getAuditLogs(params).subscribe({
       next: (response) => {
-        this.auditLogs = response.content;
-        this.totalLogs = response.totalElements;
+        this.auditLogs = response.data?.content ?? [];
+        this.totalLogs = response.data?.totalElements ?? 0;
         this.isLoading = false;
       },
       error: (error) => {

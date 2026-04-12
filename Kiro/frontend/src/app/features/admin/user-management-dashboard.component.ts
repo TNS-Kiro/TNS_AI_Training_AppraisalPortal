@@ -95,26 +95,23 @@ export class UserManagementDashboardComponent implements OnInit {
     const params = {
       search: this.searchControl.value || undefined,
       role: this.roleFilter.value || undefined,
-      status: this.statusFilter.value || undefined,
+      isActive: this.statusFilter.value === 'active' ? true : this.statusFilter.value === 'inactive' ? false : undefined,
       page: this.pageIndex,
       size: this.pageSize
     };
 
-    this.userService.getUsers(params).subscribe({
+    this.userService.getUsersPaginated(params).subscribe({
       next: (response) => {
-        console.log('Users response:', response);
-        console.log('Content:', response.content);
-        console.log('Users array length:', response.content?.length);
-        this.users = response.content || [];
-        this.totalUsers = response.totalElements || 0;
+        this.users = response.data?.content || [];
+        this.totalUsers = response.data?.totalElements || 0;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (error) => {
+      error: (err: any) => {
         this.isLoading = false;
         this.cdr.detectChanges();
         this.snackBar.open('Failed to load users', 'Close', { duration: 3000 });
-        console.error('Error loading users:', error);
+        console.error('Error loading users:', err);
       }
     });
   }
@@ -175,8 +172,8 @@ export class UserManagementDashboardComponent implements OnInit {
         this.snackBar.open(msg, 'Close', { duration: 3000 });
         this.loadUsers();
       },
-      error: (error) => {
-        this.snackBar.open(error.error?.message || 'Failed to update user status', 'Close', { duration: 3000 });
+      error: (err: any) => {
+        this.snackBar.open(err.error?.message || 'Failed to update user status', 'Close', { duration: 3000 });
       }
     });
   }

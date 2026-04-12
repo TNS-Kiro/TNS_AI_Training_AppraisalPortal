@@ -3,8 +3,8 @@ export interface AppraisalTemplate {
   version: string;
   schemaJson: string;
   isActive: boolean;
-  createdBy: number;
-  createdAt: string;
+  createdBy?: number;
+  createdAt?: string;
 }
 
 export interface AppraisalCycle {
@@ -12,11 +12,13 @@ export interface AppraisalCycle {
   name: string;
   startDate: string;
   endDate: string;
-  templateId: number;
+  // Backend returns nested template object
+  template?: AppraisalTemplate;
+  templateId?: number;
   status: CycleStatus;
-  createdBy: number;
-  createdAt: string;
-  updatedAt: string;
+  createdBy?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type CycleStatus = 'DRAFT' | 'ACTIVE' | 'CLOSED';

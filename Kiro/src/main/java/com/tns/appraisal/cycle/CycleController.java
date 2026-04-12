@@ -2,16 +2,23 @@ package com.tns.appraisal.cycle;
 
 import com.tns.appraisal.common.dto.ApiResponse;
 import com.tns.appraisal.exception.ResourceNotFoundException;
+import com.tns.appraisal.form.AppraisalForm;
 import com.tns.appraisal.template.AppraisalTemplateRepository;
+import com.tns.appraisal.user.User;
+import com.tns.appraisal.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing appraisal cycles.
@@ -25,11 +32,30 @@ public class CycleController {
 
     private final CycleService cycleService;
     private final AppraisalTemplateRepository templateRepository;
+    private final UserRepository userRepository;
 
-    public CycleController(CycleService cycleService, AppraisalTemplateRepository templateRepository) {
+    public CycleController(CycleService cycleService,
+                           AppraisalTemplateRepository templateRepository,
+                           UserRepository userRepository) {
         this.cycleService = cycleService;
         this.templateRepository = templateRepository;
+        this.userRepository = userRepository;
     }
+
+    // ==================== Helper ====================
+
+    private Long currentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof User user) {
+            return user.getId();
+        }
+        if (auth != null && auth.getPrincipal() instanceof Long id) {
+            return id;
+        }
+        return 0L; // fallback for unauthenticated dev requests
+    }
+
+    // ==================== Endpoints ====================
 
     /**
      * List all appraisal cycles.
@@ -60,33 +86,25 @@ public class CycleController {
     @PreAuthorize("hasRole('HR')")
     public ResponseEntity<ApiResponse<AppraisalCycle>> createCycle(@RequestBody CreateCycleRequest request) {
         logger.info("Creating new appraisal cycle: {}", request.getName());
-        
-        // TODO: Extract currentUserId from SecurityContext when authentication is implemented
-        Long currentUserId = 8L; // Placeholder
-        
+
         AppraisalCycle cycle = new AppraisalCycle();
         cycle.setName(request.getName());
         cycle.setStartDate(request.getStartDate());
         cycle.setEndDate(request.getEndDate());
-        
-        // Fetch the actual template entity to avoid detached proxy issues
+
         if (request.getTemplateId() != null) {
             com.tns.appraisal.template.AppraisalTemplate template = templateRepository.findById(request.getTemplateId())
                     .orElseThrow(() -> new ResourceNotFoundException("Template not found with ID: " + request.getTemplateId()));
             cycle.setTemplate(template);
         }
-        
-        AppraisalCycle createdCycle = cycleService.create(cycle, currentUserId);
+
+        AppraisalCycle createdCycle = cycleService.create(cycle, currentUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Cycle created successfully", createdCycle));
     }
 
     /**
      * Update an existing appraisal cycle.
-     * 
-     * @param id the cycle ID
-     * @param request the cycle update request
-     * @return the updated cycle
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('HR')")
@@ -94,33 +112,24 @@ public class CycleController {
             @PathVariable Long id,
             @RequestBody UpdateCycleRequest request) {
         logger.info("Updating appraisal cycle ID: {}", id);
-        
-        // TODO: Extract currentUserId from SecurityContext when authentication is implemented
-        Long currentUserId = 8L; // Placeholder
-        
+
         AppraisalCycle cycle = new AppraisalCycle();
         cycle.setName(request.getName());
         cycle.setStartDate(request.getStartDate());
         cycle.setEndDate(request.getEndDate());
-        
+
         if (request.getTemplateId() != null) {
             com.tns.appraisal.template.AppraisalTemplate template = templateRepository.findById(request.getTemplateId())
                     .orElseThrow(() -> new ResourceNotFoundException("Template not found with ID: " + request.getTemplateId()));
             cycle.setTemplate(template);
         }
-        
-        AppraisalCycle updatedCycle = cycleService.update(id, cycle, currentUserId);
+
+        AppraisalCycle updatedCycle = cycleService.update(id, cycle, currentUserId());
         return ResponseEntity.ok(ApiResponse.success("Cycle updated successfully", updatedCycle));
     }
 
     /**
      * Trigger an appraisal cycle for selected employees.
-     * Creates appraisal forms and sends notifications.
-     * Implements bulk processing with partial failure resilience.
-     * 
-     * @param id the cycle ID
-     * @param request the trigger request containing employee IDs
-     * @return detailed summary of successes and failures
      */
     @PostMapping("/{id}/trigger")
     @PreAuthorize("hasRole('HR')")
@@ -128,29 +137,18 @@ public class CycleController {
             @PathVariable Long id,
             @RequestBody TriggerCycleRequest request) {
         logger.info("Triggering appraisal cycle ID: {} for {} employees", id, request.getEmployeeIds().size());
-        
-        // TODO: Extract currentUserId from SecurityContext when authentication is implemented
-        Long currentUserId = 8L; // Placeholder
-        
-        TriggerCycleResult result = cycleService.triggerCycle(id, request.getEmployeeIds(), currentUserId);
-        
+
+        TriggerCycleResult result = cycleService.triggerCycle(id, request.getEmployeeIds(), currentUserId());
+
         String message = String.format(
                 "Cycle triggered: %d successful, %d failed out of %d employees",
-                result.getSuccessCount(),
-                result.getFailureCount(),
-                result.getTotalEmployees()
-        );
-        
+                result.getSuccessCount(), result.getFailureCount(), result.getTotalEmployees());
+
         return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     /**
      * Reopen a submitted or completed appraisal form.
-     * Resets the form status to allow re-submission.
-     * 
-     * @param id the cycle ID
-     * @param formId the form ID to reopen
-     * @return success response
      */
     @PostMapping("/{id}/reopen/{formId}")
     @PreAuthorize("hasRole('HR')")
@@ -158,37 +156,68 @@ public class CycleController {
             @PathVariable Long id,
             @PathVariable Long formId) {
         logger.info("Reopening form ID: {} in cycle ID: {}", formId, id);
-        
-        // TODO: Extract currentUserId and roles from SecurityContext when authentication is implemented
-        Long currentUserId = 8L; // Placeholder
-        List<String> userRoles = List.of("HR"); // Placeholder
-        
-        cycleService.reopenForm(id, formId, currentUserId, userRoles);
-        
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        List<String> userRoles = auth != null
+                ? auth.getAuthorities().stream()
+                        .map(a -> a.getAuthority().replace("ROLE_", ""))
+                        .toList()
+                : List.of("HR");
+
+        cycleService.reopenForm(id, formId, currentUserId(), userRoles);
         return ResponseEntity.ok(ApiResponse.success("Form reopened successfully", null));
     }
 
     /**
      * Assign a backup reviewer to an appraisal form.
-     * 
-     * @param id the cycle ID
-     * @param request the backup reviewer assignment request
-     * @return success response
      */
     @PutMapping("/{id}/backup-reviewer")
     @PreAuthorize("hasRole('HR')")
     public ResponseEntity<ApiResponse<String>> assignBackupReviewer(
             @PathVariable Long id,
             @RequestBody AssignBackupReviewerRequest request) {
-        logger.info("Assigning backup reviewer {} to form ID: {} in cycle ID: {}", 
+        logger.info("Assigning backup reviewer {} to form ID: {} in cycle ID: {}",
                 request.getBackupReviewerId(), request.getFormId(), id);
-        
-        // TODO: Extract currentUserId from SecurityContext when authentication is implemented
-        Long currentUserId = 8L; // Placeholder
-        
-        cycleService.assignBackupReviewer(id, request.getFormId(), request.getBackupReviewerId(), currentUserId);
-        
+
+        cycleService.assignBackupReviewer(id, request.getFormId(), request.getBackupReviewerId(), currentUserId());
         return ResponseEntity.ok(ApiResponse.success("Backup reviewer assigned successfully", null));
+    }
+
+    /**
+     * Get all appraisal forms for a cycle, enriched with employee/manager names.
+     */
+    @GetMapping("/{id}/forms")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<FormSummaryResponse>>> getCycleForms(@PathVariable Long id) {
+        logger.info("Fetching forms for cycle ID: {}", id);
+        List<AppraisalForm> forms = cycleService.getFormsForCycle(id);
+
+        // Pre-fetch all unique user IDs to avoid N+1 queries
+        Map<Long, String> userNames = forms.stream()
+            .flatMap(f -> {
+                java.util.stream.Stream.Builder<Long> ids = java.util.stream.Stream.builder();
+                if (f.getEmployeeId() != null) ids.add(f.getEmployeeId());
+                if (f.getManagerId() != null) ids.add(f.getManagerId());
+                if (f.getBackupReviewerId() != null) ids.add(f.getBackupReviewerId());
+                return ids.build();
+            })
+            .distinct()
+            .collect(Collectors.toMap(
+                uid -> uid,
+                uid -> userRepository.findById(uid).map(User::getFullName).orElse("Unknown"),
+                (a, b) -> a
+            ));
+
+        List<FormSummaryResponse> summaries = forms.stream()
+            .map(f -> new FormSummaryResponse(
+                f,
+                userNames.getOrDefault(f.getEmployeeId(), "Unknown"),
+                userNames.getOrDefault(f.getManagerId(), "Unknown"),
+                f.getBackupReviewerId() != null ? userNames.getOrDefault(f.getBackupReviewerId(), null) : null
+            ))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(summaries));
     }
 
     // ==================== Request DTOs ====================

@@ -1,14 +1,18 @@
 package com.tns.appraisal.cycle;
 
+import com.tns.appraisal.cycle.CycleService;
+import com.tns.appraisal.cycle.TriggerCycleResult;
+import com.tns.appraisal.form.AppraisalFormRepository;
+import com.tns.appraisal.template.AppraisalTemplate;
+import com.tns.appraisal.template.AppraisalTemplateRepository;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.IntRange;
-import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -51,7 +55,6 @@ import java.util.Set;
     "spring.jpa.hibernate.ddl-auto=none",
     "spring.flyway.enabled=false"
 })
-@Disabled("Requires AppraisalForm entity, User entity, and full CycleService implementation")
 class CycleTriggerPropertyTest {
 
     @Autowired

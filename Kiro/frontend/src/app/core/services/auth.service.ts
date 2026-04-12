@@ -1,77 +1,84 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { User, LoginRequest, LoginResponse } from '../models/user.model';
+import { map } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { User, LoginResponse } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
-/**
- * Authentication service for managing user sessions.
- */
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly API_URL = `${environment.apiUrl}/auth`;
-  
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
-  
-  public isAuthenticated$ = this.currentUser$.pipe(
-    tap(user => console.log('Auth state:', user ? 'authenticated' : 'not authenticated'))
-  );
 
-  constructor(private http: HttpClient) {
-    // this.checkAuthStatus(); // Disabled for development
+  readonly currentUserSubject = new BehaviorSubject<User | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
+
+  // Emits true when session is about to expire (used by SessionTimeoutWarningComponent)
+  readonly sessionWarningSubject = new BehaviorSubject<boolean>(false);
+  public sessionWarning$ = this.sessionWarningSubject.asObservable();
+
+  constructor(private http: HttpClient, private router: Router) {
+    this.checkAuthStatus();
   }
 
-  /**
-   * Check if user is currently authenticated by calling /api/auth/me
-   */
-  private checkAuthStatus(): void {
-    this.http.get<User>(`${this.API_URL}/me`).subscribe({
-      next: (user) => this.currentUserSubject.next(user),
+  /** Check current session by calling /api/auth/me */
+  checkAuthStatus(): void {
+    this.http.get<LoginResponse>(`${this.API_URL}/me`).subscribe({
+      next: (response) => {
+        // Backend returns ApiResponse<UserProfileResponse> — user is in `data`
+        const user = response?.data ?? null;
+        this.currentUserSubject.next(user);
+      },
       error: () => this.currentUserSubject.next(null)
     });
   }
 
-  /**
-   * Login with email and password
-   */
-  login(credentials: LoginRequest): Observable<LoginResponse> {
+  /** Login with loginIdentifier (email or employee ID) + password */
+  login(credentials: { loginIdentifier: string; password: string }): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
-      tap(response => this.currentUserSubject.next(response.user))
+      tap(response => this.currentUserSubject.next(response.data))
     );
   }
 
-  /**
-   * Logout current user
-   */
+  /** Logout and clear session */
   logout(): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/logout`, {}).pipe(
-      tap(() => this.currentUserSubject.next(null))
+      tap(() => {
+        this.currentUserSubject.next(null);
+        this.sessionWarningSubject.next(false);
+      })
     );
   }
 
-  /**
-   * Get current user value (synchronous)
-   */
+  /** Refresh session to reset the 15-minute inactivity timer */
+  refreshSession(): void {
+    // A simple GET to /api/auth/me is enough to reset the session timer
+    this.http.get(`${this.API_URL}/me`).subscribe({
+      next: () => this.sessionWarningSubject.next(false),
+      error: () => this.handleUnauthorized()
+    });
+  }
+
+  /** Handle 401 — clear state and redirect to login */
+  handleUnauthorized(): void {
+    this.currentUserSubject.next(null);
+    this.sessionWarningSubject.next(false);
+    this.router.navigate(['/login']);
+  }
+
   get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
 
-  /**
-   * Check if user has a specific role
-   */
   hasRole(roleName: string): boolean {
     const user = this.currentUserValue;
-    return user ? user.roles.some(r => r.name === roleName) : false;
+    return user ? user.roles.some(r => r === roleName) : false;
   }
 
-  /**
-   * Check if user has any of the specified roles
-   */
   hasAnyRole(roleNames: string[]): boolean {
     const user = this.currentUserValue;
-    return user ? user.roles.some(r => roleNames.includes(r.name)) : false;
+    return user ? user.roles.some(r => roleNames.includes(r)) : false;
   }
 }

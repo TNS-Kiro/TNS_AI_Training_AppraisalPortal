@@ -1,7 +1,6 @@
 package com.tns.appraisal.cycle;
 
 import net.jqwik.api.*;
-import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -48,7 +47,6 @@ import java.util.List;
     "spring.jpa.hibernate.ddl-auto=none",
     "spring.flyway.enabled=false"
 })
-@Disabled("Requires AppraisalForm entity, User entity, and full CycleService.reopenForm() implementation")
 class FormReopenPropertyTest {
 
     @Autowired

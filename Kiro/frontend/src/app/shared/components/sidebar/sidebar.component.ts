@@ -47,7 +47,8 @@ export class SidebarComponent {
   get visibleMenuItems(): MenuItem[] {
     if (!this.user) return [];
     
-    const userRoles = this.user.roles.map(r => r.name as string);
+    // roles is RoleName[] (plain strings) from the backend
+    const userRoles = this.user.roles as string[];
     return this.menuItems.filter(item => 
       item.roles.some(role => userRoles.includes(role))
     );

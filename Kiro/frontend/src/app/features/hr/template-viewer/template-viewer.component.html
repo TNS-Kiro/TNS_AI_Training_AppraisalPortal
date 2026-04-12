@@ -50,7 +50,7 @@
           </div>
           <div class="info-row">
             <span class="info-label">Created:</span>
-            <span class="info-value">{{ formatDate(template.createdAt) }}</span>
+            <span class="info-value">{{ template.createdAt ? formatDate(template.createdAt) : '-' }}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Template ID:</span>

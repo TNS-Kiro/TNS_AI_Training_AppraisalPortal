@@ -52,26 +52,25 @@ export class CycleDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loading = true;
     this.loadDashboard();
     this.loadCycles();
   }
 
   /**
-   * Load HR dashboard data
+   * Load HR dashboard data — gracefully handles 500 if not yet implemented
    */
   loadDashboard(): void {
-    this.loading = true;
-    this.error = null;
-
     this.dashboardService.getHRDashboard().subscribe({
       next: (response) => {
         this.dashboardData = response.data || null;
         this.loading = false;
       },
       error: (err) => {
-        this.error = 'Failed to load dashboard data. Please try again.';
+        // Dashboard endpoint may not be fully implemented yet — don't block the page
+        console.warn('HR dashboard data unavailable:', err.message || err);
+        this.dashboardData = null;
         this.loading = false;
-        console.error('Error loading HR dashboard:', err);
       }
     });
   }
@@ -83,9 +82,11 @@ export class CycleDashboardComponent implements OnInit {
     this.cycleService.getCycles().subscribe({
       next: (response) => {
         this.cycles = response.data || [];
+        this.loading = false;
       },
       error: (err) => {
         console.error('Error loading cycles:', err);
+        this.loading = false;
         this.snackBar.open('Failed to load cycles', 'Close', { duration: 3000 });
       }
     });

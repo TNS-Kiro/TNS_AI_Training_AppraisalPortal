@@ -236,7 +236,7 @@ export class CycleTriggerComponent implements OnInit {
       `✓ Success: ${result.successCount}\n` +
       `✗ Failed: ${result.failureCount}\n\n` +
       `Failed employees:\n` +
-      result.failures.map(f => `- ${f.employeeName}: ${f.reason}`).join('\n');
+      result.failures.map(f => `- Employee ${f.employeeId}: ${f.errorReason}`).join('\n');
     
     this.snackBar.open(message, 'Close', { duration: 10000 });
     

@@ -8,9 +8,10 @@ export interface User {
   managerId?: number;
   managerName?: string;
   isActive: boolean;
-  roles: Role[];
-  createdAt: string;
-  updatedAt: string;
+  // Backend returns roles as plain strings (e.g. "EMPLOYEE", "HR")
+  roles: RoleName[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Role {
@@ -21,11 +22,14 @@ export interface Role {
 export type RoleName = 'EMPLOYEE' | 'MANAGER' | 'HR' | 'ADMIN';
 
 export interface LoginRequest {
-  email: string;
+  loginIdentifier: string;
   password: string;
 }
 
+// Backend wraps responses in ApiResponse<T> with a `data` field
 export interface LoginResponse {
-  user: User;
+  success: boolean;
   message: string;
+  // data holds the UserProfileResponse from the backend
+  data: User;
 }

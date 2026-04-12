@@ -132,11 +132,10 @@ export class CycleCreateComponent implements OnInit {
       name: formValue.name,
       startDate: this.formatDate(formValue.startDate),
       endDate: this.formatDate(formValue.endDate),
-      templateId: formValue.templateId,
-      status: 'DRAFT' as const
+      templateId: formValue.templateId
     };
 
-    this.cycleService.createCycle(cycleData).subscribe({
+    this.cycleService.createCycle(cycleData as any).subscribe({
       next: (response) => {
         this.submitting = false;
         this.snackBar.open('Cycle created successfully', 'Close', { duration: 3000 });

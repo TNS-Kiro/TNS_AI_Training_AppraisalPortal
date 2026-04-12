@@ -12,11 +12,10 @@ export interface TriggerCycleRequest {
 export interface TriggerCycleResult {
   successCount: number;
   failureCount: number;
-  totalCount: number;
+  totalEmployees: number;   // backend field name
   failures: Array<{
     employeeId: number;
-    employeeName: string;
-    reason: string;
+    errorReason: string;    // backend field name
   }>;
 }
 
@@ -81,5 +80,12 @@ export class CycleService {
       formId,
       backupReviewerId
     });
+  }
+
+  /**
+   * Get all forms for a cycle
+   */
+  getCycleForms(cycleId: number): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/${cycleId}/forms`);
   }
 }

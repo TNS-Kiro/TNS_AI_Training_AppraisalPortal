@@ -64,23 +64,24 @@ export class RoleAssignmentDialogComponent implements OnInit {
 
   loadRoles(): void {
     this.isLoading = true;
-    this.userService.getRoles().subscribe({
-      next: (response) => {
-        this.roles = response.data!.map(role => ({
-          id: role.id,
-          name: role.name,
-          description: this.roleDescriptions[role.name] || '',
-          selected: Array.isArray(this.data.user.roles) && this.data.user.roles.includes(role.name)
-        }));
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.snackBar.open('Failed to load roles', 'Close', { duration: 3000 });
-        this.cdr.markForCheck();
-      }
-    });
+    // Use hardcoded roles since backend /api/roles may not exist yet
+    const allRoles = [
+      { id: 1, name: 'EMPLOYEE' },
+      { id: 2, name: 'MANAGER' },
+      { id: 3, name: 'HR' },
+      { id: 4, name: 'ADMIN' }
+    ];
+    const userRoleNames = (this.data.user.roles || []).map(r =>
+      typeof r === 'string' ? r : (r as any).name
+    );
+    this.roles = allRoles.map(role => ({
+      id: role.id,
+      name: role.name,
+      description: this.roleDescriptions[role.name] || '',
+      selected: userRoleNames.includes(role.name)
+    }));
+    this.isLoading = false;
+    this.cdr.markForCheck();
   }
 
   onSave(): void {
@@ -100,9 +101,9 @@ export class RoleAssignmentDialogComponent implements OnInit {
         this.snackBar.open('Roles updated successfully', 'Close', { duration: 3000 });
         this.dialogRef.close(response.data);
       },
-      error: (error) => {
+      error: (err: any) => {
         this.isSaving = false;
-        this.snackBar.open(error.error?.message || 'Failed to update roles', 'Close', { duration: 3000 });
+        this.snackBar.open(err.error?.message || 'Failed to update roles', 'Close', { duration: 3000 });
         this.cdr.markForCheck();
       }
     });

@@ -45,22 +45,21 @@ export class LoginComponent {
   }
 
   onSubmit(): void {
-    if (this.loginForm.invalid) {
-      return;
-    }
+    if (this.loginForm.invalid) return;
 
     this.isLoading = true;
     this.errorMessage = '';
 
     this.authService.login(this.loginForm.value).subscribe({
-      next: (user) => {
+      next: (response) => {
         this.isLoading = false;
-        // Navigate based on user role
-        if (user.roles.includes('ADMIN')) {
-          this.router.navigate(['/admin']);
-        } else if (user.roles.includes('HR')) {
-          this.router.navigate(['/hr']);
-        } else if (user.roles.includes('MANAGER')) {
+        const roles: string[] = response.data?.roles ?? [];
+
+        if (roles.includes('ADMIN')) {
+          this.router.navigate(['/admin/users']);
+        } else if (roles.includes('HR')) {
+          this.router.navigate(['/hr/templates']);
+        } else if (roles.includes('MANAGER')) {
           this.router.navigate(['/manager']);
         } else {
           this.router.navigate(['/employee']);

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuditLog, AuditLogSearchParams } from '../models/audit.model';
-import { PageResponse } from '../models/api-response.model';
+import { ApiResponse, PageResponse } from '../models/api-response.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -14,11 +14,12 @@ export class AuditService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get paginated audit logs with optional filters
+   * Get paginated audit logs with optional filters.
+   * Backend returns ApiResponse<PageResponse<AuditLog>>.
    */
-  getAuditLogs(params: AuditLogSearchParams = {}): Observable<PageResponse<AuditLog>> {
+  getAuditLogs(params: AuditLogSearchParams = {}): Observable<ApiResponse<PageResponse<AuditLog>>> {
     let httpParams = new HttpParams();
-    
+
     if (params.userId !== undefined) {
       httpParams = httpParams.set('userId', params.userId.toString());
     }
@@ -38,6 +39,6 @@ export class AuditService {
       httpParams = httpParams.set('size', params.size.toString());
     }
 
-    return this.http.get<PageResponse<AuditLog>>(this.API_URL, { params: httpParams });
+    return this.http.get<ApiResponse<PageResponse<AuditLog>>>(this.API_URL, { params: httpParams });
   }
 }

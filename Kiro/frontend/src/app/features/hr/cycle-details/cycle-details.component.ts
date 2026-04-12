@@ -94,20 +94,25 @@ export class CycleDetailsComponent implements OnInit {
   }
 
   /**
-   * Load forms for this cycle
-   * Note: This would typically be a separate API endpoint like /api/cycles/{id}/forms
-   * For now, we'll use a placeholder
+   * Load forms for this cycle from the backend
    */
   loadForms(): void {
+    if (!this.cycleId) return;
     this.loading = true;
-    
-    // TODO: Replace with actual API call when backend endpoint is ready
-    // this.cycleService.getCycleForms(this.cycleId).subscribe(...)
-    
-    // Placeholder - in real implementation, this would fetch from backend
-    this.forms = [];
-    this.filteredForms = [];
-    this.loading = false;
+
+    this.cycleService.getCycleForms(this.cycleId).subscribe({
+      next: (response) => {
+        this.forms = response.data || [];
+        this.filteredForms = [...this.forms];
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading forms:', err);
+        this.forms = [];
+        this.filteredForms = [];
+        this.loading = false;
+      }
+    });
   }
 
   /**
