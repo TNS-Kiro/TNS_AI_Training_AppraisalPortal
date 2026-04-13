@@ -32,20 +32,26 @@ public class AppraisalFormDto {
     public static AppraisalFormDto fromEntity(AppraisalForm form) {
         AppraisalFormDto dto = new AppraisalFormDto();
         dto.setId(form.getId());
-        dto.setCycleId(form.getCycle().getId());
-        dto.setEmployeeId(form.getEmployee().getId());
-        dto.setEmployeeName(form.getEmployee().getFullName());
-        dto.setEmployeeCode(form.getEmployee().getEmployeeId());
-        dto.setManagerId(form.getManager().getId());
-        dto.setManagerName(form.getManager().getFullName());
+        dto.setCycleId(form.getCycleId());
+
+        if (form.getEmployee() != null) {
+            dto.setEmployeeId(form.getEmployee().getId());
+            dto.setEmployeeName(form.getEmployee().getFullName());
+            dto.setEmployeeCode(form.getEmployee().getEmployeeId());
+        }
+
+        if (form.getManager() != null) {
+            dto.setManagerId(form.getManager().getId());
+            dto.setManagerName(form.getManager().getFullName());
+        }
 
         if (form.getBackupReviewer() != null) {
             dto.setBackupReviewerId(form.getBackupReviewer().getId());
             dto.setBackupReviewerName(form.getBackupReviewer().getFullName());
         }
 
-        dto.setTemplateId(form.getTemplate().getId());
-        dto.setStatus(form.getStatus());
+        dto.setTemplateId(form.getTemplateId());
+        dto.setStatus(form.getStatus() != null ? form.getStatus().name() : "NOT_STARTED");
         dto.setSubmittedAt(form.getSubmittedAt());
         dto.setReviewStartedAt(form.getReviewStartedAt());
         dto.setReviewedAt(form.getReviewedAt());

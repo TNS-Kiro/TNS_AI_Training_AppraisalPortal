@@ -54,10 +54,9 @@ public class AuthService {
     public User login(String loginIdentifier, String password, HttpServletRequest request) {
         logger.debug("Login attempt for identifier: {}", loginIdentifier);
 
-        // Find user by email or employee ID
-        Optional<User> userOpt = userRepository.findByEmail(loginIdentifier);
+        Optional<User> userOpt = userRepository.findByEmailWithRoles(loginIdentifier);
         if (userOpt.isEmpty()) {
-            userOpt = userRepository.findByEmployeeId(loginIdentifier);
+            userOpt = userRepository.findByEmployeeIdWithRoles(loginIdentifier);
         }
 
         // Validate user exists
@@ -148,7 +147,7 @@ public class AuthService {
             throw new InvalidCredentialsException("No authenticated user in session");
         }
 
-        return userRepository.findById(userId)
+        return userRepository.findByIdWithRoles(userId)
             .orElseThrow(() -> new InvalidCredentialsException("User not found"));
     }
 

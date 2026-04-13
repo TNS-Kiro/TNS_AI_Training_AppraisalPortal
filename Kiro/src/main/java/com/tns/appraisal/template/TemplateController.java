@@ -44,7 +44,7 @@ public class TemplateController {
      * @return the template
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'HR', 'ADMIN')")
     public ResponseEntity<ApiResponse<AppraisalTemplate>> getTemplateById(@PathVariable Long id) {
         AppraisalTemplate template = templateService.getTemplateById(id);
         return ResponseEntity.ok(ApiResponse.success(template));

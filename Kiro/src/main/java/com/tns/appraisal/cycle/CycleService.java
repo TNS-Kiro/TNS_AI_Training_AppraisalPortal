@@ -7,6 +7,7 @@ import com.tns.appraisal.exception.ValidationException;
 import com.tns.appraisal.form.AppraisalForm;
 import com.tns.appraisal.form.AppraisalFormDto;
 import com.tns.appraisal.form.AppraisalFormRepository;
+import com.tns.appraisal.form.FormStatus;
 import com.tns.appraisal.template.AppraisalTemplate;
 import com.tns.appraisal.user.User;
 import com.tns.appraisal.user.UserRepository;
@@ -30,7 +31,7 @@ public class CycleService {
 
     private static final Logger logger = LoggerFactory.getLogger(CycleService.class);
 
-    private static final Set<String> REOPENABLE_STATUSES = Set.of("SUBMITTED", "REVIEWED_AND_COMPLETED");
+    private static final Set<FormStatus> REOPENABLE_STATUSES = Set.of(FormStatus.SUBMITTED, FormStatus.REVIEWED_AND_COMPLETED);
 
     private final AppraisalCycleRepository cycleRepository;
     private final AppraisalFormRepository formRepository;
@@ -149,7 +150,7 @@ public class CycleService {
         cycleRepository.findById(cycleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appraisal cycle not found with ID: " + cycleId));
 
-        List<AppraisalForm> forms = formRepository.findByCycleId(cycleId);
+        List<AppraisalForm> forms = formRepository.findByCycleIdWithRelations(cycleId);
         return forms.stream()
                 .map(AppraisalFormDto::fromEntity)
                 .collect(Collectors.toList());
@@ -189,7 +190,7 @@ public class CycleService {
 
         for (Long employeeId : employeeIds) {
             try {
-                if (formRepository.existsByCycleIdAndEmployeeId(cycleId, employeeId)) {
+                if (formRepository.existsByCycle_IdAndEmployee_Id(cycleId, employeeId)) {
                     throw new ValidationException("Form already exists for this employee in this cycle");
                 }
 
@@ -206,7 +207,7 @@ public class CycleService {
                 form.setEmployee(employee);
                 form.setManager(manager);
                 form.setTemplate(cycleTemplate);
-                form.setStatus("NOT_STARTED");
+                form.setStatus(FormStatus.NOT_STARTED);
 
                 formRepository.save(form);
 
@@ -271,14 +272,14 @@ public class CycleService {
             throw new ValidationException("Form does not belong to the specified cycle");
         }
 
-        String currentStatus = form.getStatus();
+        FormStatus currentStatus = form.getStatus();
         if (!REOPENABLE_STATUSES.contains(currentStatus)) {
             throw new ValidationException(
                     "Form can only be reopened from SUBMITTED or REVIEWED_AND_COMPLETED status. Current: " + currentStatus
             );
         }
 
-        form.setStatus("DRAFT_SAVED");
+        form.setStatus(FormStatus.DRAFT_SAVED);
         form.setSubmittedAt(null);
         form.setReviewStartedAt(null);
         form.setReviewedAt(null);

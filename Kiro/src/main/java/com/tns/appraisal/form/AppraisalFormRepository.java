@@ -1,6 +1,8 @@
 package com.tns.appraisal.form;
 
 import com.tns.appraisal.common.BaseRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,15 +11,56 @@ import java.util.Optional;
 @Repository
 public interface AppraisalFormRepository extends BaseRepository<AppraisalForm, Long> {
 
-    List<AppraisalForm> findByCycleId(Long cycleId);
+    List<AppraisalForm> findByCycle_Id(Long cycleId);
 
-    Optional<AppraisalForm> findByCycleIdAndEmployeeId(Long cycleId, Long employeeId);
+    @Query("SELECT f FROM AppraisalForm f " +
+           "LEFT JOIN FETCH f.cycle " +
+           "LEFT JOIN FETCH f.employee " +
+           "LEFT JOIN FETCH f.manager " +
+           "LEFT JOIN FETCH f.backupReviewer " +
+           "LEFT JOIN FETCH f.template " +
+           "WHERE f.cycle.id = :cycleId")
+    List<AppraisalForm> findByCycleIdWithRelations(@Param("cycleId") Long cycleId);
 
-    boolean existsByCycleIdAndEmployeeId(Long cycleId, Long employeeId);
+    @Query("SELECT f FROM AppraisalForm f " +
+           "LEFT JOIN FETCH f.cycle " +
+           "LEFT JOIN FETCH f.employee " +
+           "LEFT JOIN FETCH f.manager " +
+           "LEFT JOIN FETCH f.backupReviewer " +
+           "LEFT JOIN FETCH f.template " +
+           "WHERE f.employee.id = :employeeId ORDER BY f.createdAt DESC")
+    List<AppraisalForm> findByEmployeeIdWithRelations(@Param("employeeId") Long employeeId);
 
-    List<AppraisalForm> findByEmployeeId(Long employeeId);
+    @Query("SELECT f FROM AppraisalForm f " +
+           "LEFT JOIN FETCH f.cycle " +
+           "LEFT JOIN FETCH f.employee " +
+           "LEFT JOIN FETCH f.manager " +
+           "LEFT JOIN FETCH f.backupReviewer " +
+           "LEFT JOIN FETCH f.template " +
+           "WHERE f.id = :id")
+    Optional<AppraisalForm> findByIdWithRelations(@Param("id") Long id);
 
-    List<AppraisalForm> findByManagerId(Long managerId);
+    Optional<AppraisalForm> findByCycle_IdAndEmployee_Id(Long cycleId, Long employeeId);
 
-    List<AppraisalForm> findByManagerIdAndStatus(Long managerId, String status);
+    boolean existsByCycle_IdAndEmployee_Id(Long cycleId, Long employeeId);
+
+    List<AppraisalForm> findByEmployee_Id(Long employeeId);
+
+    List<AppraisalForm> findByEmployee_IdOrderByCreatedAtDesc(Long employeeId);
+
+    @Query("SELECT f FROM AppraisalForm f " +
+           "LEFT JOIN FETCH f.cycle " +
+           "LEFT JOIN FETCH f.employee " +
+           "LEFT JOIN FETCH f.manager " +
+           "LEFT JOIN FETCH f.template " +
+           "WHERE f.manager.id = :managerId")
+    List<AppraisalForm> findByManager_Id(@Param("managerId") Long managerId);
+
+    List<AppraisalForm> findByManager_IdAndStatus(Long managerId, FormStatus status);
+
+    List<AppraisalForm> findByCycle_IdAndManager_Id(Long cycleId, Long managerId);
+
+    List<AppraisalForm> findByCycle_IdAndBackupReviewer_Id(Long cycleId, Long backupReviewerId);
+
+    long countByCycle_IdAndStatus(Long cycleId, FormStatus status);
 }

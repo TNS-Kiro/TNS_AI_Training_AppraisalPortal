@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -59,7 +59,8 @@ export class CycleDetailsComponent implements OnInit {
     private router: Router,
     private cycleService: CycleService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -85,6 +86,7 @@ export class CycleDetailsComponent implements OnInit {
     this.cycleService.getCycleById(this.cycleId).subscribe({
       next: (response) => {
         this.cycle = response.data || null;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error loading cycle:', err);
@@ -106,6 +108,7 @@ export class CycleDetailsComponent implements OnInit {
         this.forms = response.data || [];
         this.filteredForms = [...this.forms];
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
@@ -113,6 +116,7 @@ export class CycleDetailsComponent implements OnInit {
         this.snackBar.open('Failed to load forms', 'Close', { duration: 3000 });
         this.forms = [];
         this.filteredForms = [];
+        this.cdr.detectChanges();
       }
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -65,7 +65,8 @@ export class CycleTriggerComponent implements OnInit {
     private cycleService: CycleService,
     private userService: UserService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -91,6 +92,7 @@ export class CycleTriggerComponent implements OnInit {
     this.cycleService.getCycleById(this.cycleId).subscribe({
       next: (response) => {
         this.cycle = response.data || null;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error loading cycle:', err);
@@ -116,11 +118,13 @@ export class CycleTriggerComponent implements OnInit {
         this.employees = eligibleEmployees;
         this.filteredEmployees = [...this.employees];
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
         console.error('Error loading employees:', err);
         this.snackBar.open('Failed to load employees', 'Close', { duration: 3000 });
+        this.cdr.detectChanges();
       }
     });
   }

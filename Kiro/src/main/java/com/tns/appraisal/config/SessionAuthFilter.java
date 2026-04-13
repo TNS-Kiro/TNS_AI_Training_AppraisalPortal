@@ -69,7 +69,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                         session.setAttribute(SESSION_AUTHORITIES_KEY, authorities);
 
                         UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(user, null, authorities);
+                                new UsernamePasswordAuthenticationToken(userId, null, authorities);
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     });
                 }

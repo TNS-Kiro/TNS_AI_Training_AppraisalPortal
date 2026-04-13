@@ -13,23 +13,47 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },
 
-  // Phase 1: Employee dashboard
+  // Employee routes
   {
     path: 'employee',
     loadComponent: () => import('./features/employee/employee-dashboard.component').then(m => m.EmployeeDashboardComponent),
     canActivate: [authGuard, roleGuard],
     data: { roles: ['EMPLOYEE', 'MANAGER'] }
   },
+  {
+    path: 'employee/appraisal/:id',
+    loadComponent: () => import('./features/employee/self-appraisal-form.component').then(m => m.SelfAppraisalFormComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['EMPLOYEE', 'MANAGER'] }
+  },
+  {
+    path: 'employee/history',
+    loadComponent: () => import('./features/employee/historical-forms-viewer.component').then(m => m.HistoricalFormsViewerComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['EMPLOYEE', 'MANAGER'] }
+  },
 
-  // Phase 1: Manager dashboard
+  // Manager routes
   {
     path: 'manager',
     loadComponent: () => import('./features/manager/manager-dashboard.component').then(m => m.ManagerDashboardComponent),
     canActivate: [authGuard, roleGuard],
     data: { roles: ['MANAGER'] }
   },
+  {
+    path: 'manager/appraisal/:id',
+    loadComponent: () => import('./features/manager/manager-self-appraisal.component').then(m => m.ManagerSelfAppraisalComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['MANAGER'] }
+  },
+  {
+    path: 'manager/review/:id',
+    loadComponent: () => import('./features/manager/review-form.component').then(m => m.ReviewFormComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['MANAGER'] }
+  },
 
-  // Phase 1: Admin routes
+  // Admin routes
   {
     path: 'admin/users',
     loadComponent: () => import('./features/admin/user-management-dashboard.component').then(m => m.UserManagementDashboardComponent),
