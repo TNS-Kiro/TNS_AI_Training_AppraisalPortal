@@ -1,47 +1,43 @@
 package com.tns.appraisal.form;
 
 import com.tns.appraisal.common.BaseEntity;
+import com.tns.appraisal.cycle.AppraisalCycle;
+import com.tns.appraisal.template.AppraisalTemplate;
+import com.tns.appraisal.user.User;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-
-/**
- * Entity representing an employee's appraisal form within a cycle.
- * Each form is unique per (cycle, employee) pair.
- */
 @Entity
-@Table(
-    name = "appraisal_forms",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uq_form_cycle_employee",
-        columnNames = {"cycle_id", "employee_id"}
-    )
-)
+@Table(name = "appraisal_forms",
+       uniqueConstraints = @UniqueConstraint(
+           name = "uq_form_cycle_employee",
+           columnNames = {"cycle_id", "employee_id"}
+       ))
 public class AppraisalForm extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // TODO: Replace with @ManyToOne to AppraisalCycle once that entity is created (task 2.2.1)
-    @Column(name = "cycle_id", nullable = false)
-    private Long cycleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cycle_id", nullable = false)
+    private AppraisalCycle cycle;
 
-    // TODO: Replace with @ManyToOne to User once that entity is created (task 1.1.1)
-    @Column(name = "employee_id", nullable = false)
-    private Long employeeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private User employee;
 
-    // TODO: Replace with @ManyToOne to User once that entity is created (task 1.1.1)
-    @Column(name = "manager_id", nullable = false)
-    private Long managerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id", nullable = false)
+    private User manager;
 
-    // TODO: Replace with @ManyToOne to User once that entity is created (task 1.1.1)
-    @Column(name = "backup_reviewer_id")
-    private Long backupReviewerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "backup_reviewer_id")
+    private User backupReviewer;
 
-    // TODO: Replace with @ManyToOne to AppraisalTemplate once that entity is created (task 2.1.1)
-    @Column(name = "template_id", nullable = false)
-    private Long templateId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id", nullable = false)
+    private AppraisalTemplate template;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
@@ -63,23 +59,26 @@ public class AppraisalForm extends BaseEntity {
     @Column(name = "pdf_storage_path", columnDefinition = "NVARCHAR(500)")
     private String pdfStoragePath;
 
+    public AppraisalForm() {
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getCycleId() { return cycleId; }
-    public void setCycleId(Long cycleId) { this.cycleId = cycleId; }
+    public AppraisalCycle getCycle() { return cycle; }
+    public void setCycle(AppraisalCycle cycle) { this.cycle = cycle; }
 
-    public Long getEmployeeId() { return employeeId; }
-    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+    public User getEmployee() { return employee; }
+    public void setEmployee(User employee) { this.employee = employee; }
 
-    public Long getManagerId() { return managerId; }
-    public void setManagerId(Long managerId) { this.managerId = managerId; }
+    public User getManager() { return manager; }
+    public void setManager(User manager) { this.manager = manager; }
 
-    public Long getBackupReviewerId() { return backupReviewerId; }
-    public void setBackupReviewerId(Long backupReviewerId) { this.backupReviewerId = backupReviewerId; }
+    public User getBackupReviewer() { return backupReviewer; }
+    public void setBackupReviewer(User backupReviewer) { this.backupReviewer = backupReviewer; }
 
-    public Long getTemplateId() { return templateId; }
-    public void setTemplateId(Long templateId) { this.templateId = templateId; }
+    public AppraisalTemplate getTemplate() { return template; }
+    public void setTemplate(AppraisalTemplate template) { this.template = template; }
 
     public FormStatus getStatus() { return status; }
     public void setStatus(FormStatus status) { this.status = status; }
@@ -98,4 +97,38 @@ public class AppraisalForm extends BaseEntity {
 
     public String getPdfStoragePath() { return pdfStoragePath; }
     public void setPdfStoragePath(String pdfStoragePath) { this.pdfStoragePath = pdfStoragePath; }
+
+    // Convenience ID getters used by FormService, ReviewService, ReviewController
+    public Long getCycleId() { return cycle != null ? cycle.getId() : null; }
+    public Long getEmployeeId() { return employee != null ? employee.getId() : null; }
+    public Long getManagerId() { return manager != null ? manager.getId() : null; }
+    public Long getBackupReviewerId() { return backupReviewer != null ? backupReviewer.getId() : null; }
+    public Long getTemplateId() { return template != null ? template.getId() : null; }
+
+    // Convenience ID setters for backward compatibility (tests / Phase 3 code)
+    public void setCycleId(Long cycleId) {
+        if (this.cycle == null) { this.cycle = new AppraisalCycle(); }
+        this.cycle.setId(cycleId);
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        if (this.employee == null) { this.employee = new User(); }
+        this.employee.setId(employeeId);
+    }
+
+    public void setManagerId(Long managerId) {
+        if (this.manager == null) { this.manager = new User(); }
+        this.manager.setId(managerId);
+    }
+
+    public void setBackupReviewerId(Long backupReviewerId) {
+        if (backupReviewerId == null) { this.backupReviewer = null; return; }
+        if (this.backupReviewer == null) { this.backupReviewer = new User(); }
+        this.backupReviewer.setId(backupReviewerId);
+    }
+
+    public void setTemplateId(Long templateId) {
+        if (this.template == null) { this.template = new AppraisalTemplate(); }
+        this.template.setId(templateId);
+    }
 }

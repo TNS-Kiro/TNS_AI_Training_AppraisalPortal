@@ -10,8 +10,12 @@ public class FormDetailDto {
 
     private Long id;
     private Long cycleId;
+    private String cycleName;
     private Long employeeId;
+    private String employeeName;
+    private String designation;
     private Long managerId;
+    private String managerName;
     private Long backupReviewerId;
     private Long templateId;
     private FormStatus status;
@@ -29,11 +33,23 @@ public class FormDetailDto {
     public Long getCycleId() { return cycleId; }
     public void setCycleId(Long cycleId) { this.cycleId = cycleId; }
 
+    public String getCycleName() { return cycleName; }
+    public void setCycleName(String cycleName) { this.cycleName = cycleName; }
+
     public Long getEmployeeId() { return employeeId; }
     public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
 
+    public String getEmployeeName() { return employeeName; }
+    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+
+    public String getDesignation() { return designation; }
+    public void setDesignation(String designation) { this.designation = designation; }
+
     public Long getManagerId() { return managerId; }
     public void setManagerId(Long managerId) { this.managerId = managerId; }
+
+    public String getManagerName() { return managerName; }
+    public void setManagerName(String managerName) { this.managerName = managerName; }
 
     public Long getBackupReviewerId() { return backupReviewerId; }
     public void setBackupReviewerId(Long backupReviewerId) { this.backupReviewerId = backupReviewerId; }

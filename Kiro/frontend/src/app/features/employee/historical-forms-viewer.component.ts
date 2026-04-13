@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { AppraisalForm } from '../../core/models/appraisal.model';
+import { environment } from '../../../environments/environment';
 
 /**
  * Historical Forms Viewer Component
@@ -401,9 +402,9 @@ export class HistoricalFormsViewerComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.http.get<AppraisalForm[]>('/api/forms/history').subscribe({
-      next: (forms) => {
-        this.historicalForms = forms;
+    this.http.get<any>(`${environment.apiUrl}/forms/history`).subscribe({
+      next: (response) => {
+        this.historicalForms = response.data || response;
         this.applyFilters();
         this.loading = false;
       },
@@ -462,7 +463,7 @@ export class HistoricalFormsViewerComponent implements OnInit {
   }
 
   downloadPdf(formId: number): void {
-    window.open(`/api/forms/${formId}/pdf`, '_blank');
+    window.open(`${environment.apiUrl}/forms/${formId}/pdf`, '_blank');
   }
 
   goToDashboard(): void {

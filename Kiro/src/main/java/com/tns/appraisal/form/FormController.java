@@ -4,7 +4,7 @@ import com.tns.appraisal.common.dto.ApiResponse;
 import com.tns.appraisal.form.dto.FormDetailDto;
 import com.tns.appraisal.form.dto.FormSummaryDto;
 import com.tns.appraisal.form.dto.SaveDraftRequest;
-import com.tns.appraisal.form.dto.SaveReviewDraftRequest;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +26,10 @@ import java.util.stream.Collectors;
  *   <li>GET  /api/forms/{id}            – Employee (own), Manager (team), HR, Admin</li>
  *   <li>PUT  /api/forms/{id}/draft      – EMPLOYEE (own form only)</li>
  *   <li>POST /api/forms/{id}/submit     – EMPLOYEE (own form only)</li>
- *   <li>PUT  /api/forms/{id}/review/draft    – MANAGER (assigned forms only, delegates to ReviewController)</li>
  *   <li>GET  /api/forms/{id}/pdf        – Employee (own), Manager, HR</li>
  *   <li>GET  /api/forms/history         – Employee (own), Manager (team), HR</li>
  * </ul>
- * <p>Note: POST /api/forms/{id}/review/complete is handled by ReviewController.</p>
+ * <p>Note: Review endpoints (PUT /review/draft, POST /review/complete) are handled by ReviewController.</p>
  */
 @RestController
 @RequestMapping("/api/forms")
@@ -131,25 +130,6 @@ public class FormController {
         Long userId = getUserId(auth);
         FormDetailDto dto = formService.submitForm(id, userId);
         return ResponseEntity.ok(ApiResponse.success("Form submitted successfully", dto));
-    }
-
-    // -------------------------------------------------------------------------
-    // PUT /api/forms/{id}/review/draft  – MANAGER: save review draft
-    // -------------------------------------------------------------------------
-
-    /**
-     * Saves the manager's review as a draft.
-     * Transitions SUBMITTED → UNDER_REVIEW on first save, then → REVIEW_DRAFT_SAVED.
-     */
-    @PutMapping("/{id}/review/draft")
-    @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<ApiResponse<FormDetailDto>> saveReviewDraft(
-            @PathVariable Long id,
-            @RequestBody SaveReviewDraftRequest request,
-            Authentication auth) {
-        Long userId = getUserId(auth);
-        FormDetailDto dto = formService.saveReviewDraft(id, request, userId);
-        return ResponseEntity.ok(ApiResponse.success("Review draft saved successfully", dto));
     }
 
     // -------------------------------------------------------------------------

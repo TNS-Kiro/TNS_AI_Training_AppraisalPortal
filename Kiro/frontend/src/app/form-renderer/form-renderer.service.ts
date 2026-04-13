@@ -39,9 +39,23 @@ export class FormRendererService {
     try {
       const parsed = JSON.parse(schemaJson);
       
-      if (!parsed.version || !Array.isArray(parsed.sections)) {
-        throw new Error('Invalid template schema: missing version or sections');
+      if (!Array.isArray(parsed.sections)) {
+        throw new Error('Invalid template schema: missing sections array');
       }
+
+      if (!parsed.version) {
+        parsed.version = '1.0';
+      }
+
+      parsed.sections = parsed.sections.map((section: any) => ({
+        sectionType: section.sectionType || section.id,
+        title: section.title,
+        items: (section.items || section.fields || []).map((item: any) => ({
+          id: item.id,
+          label: item.label,
+          ratingScale: item.ratingScale || 'competency'
+        }))
+      }));
 
       return parsed as AppraisalTemplateSchema;
     } catch (error) {

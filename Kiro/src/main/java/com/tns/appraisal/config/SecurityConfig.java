@@ -10,47 +10,57 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/**
- * Security configuration for session-based authentication with role-based access control.
- * Configures Spring Security for the Employee Appraisal Cycle application.
- */
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    /**
-     * Configures HTTP security with session-based authentication.
-     * - Disables CSRF for POC environment
-     * - Uses HTTP (not HTTPS) for POC
-     * - Sets session timeout to 15 minutes (configured in application.properties)
-     * - Defines public and protected endpoints
-     * - Handles session expiration with 401 response
-     */
+    private final SessionAuthFilter sessionAuthFilter;
+
+    public SecurityConfig(SessionAuthFilter sessionAuthFilter) {
+        this.sessionAuthFilter = sessionAuthFilter;
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for POC environment
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            
-            // Configure authorization rules
+
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
                 .requestMatchers("/api/auth/login").permitAll()
-                
-                // All other endpoints require authentication
+                .requestMatchers("/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
             )
-            
-            // Configure session management with 15-minute timeout
+
+            .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
             .sessionManagement(session -> session
-                // Allow only one session per user
                 .maximumSessions(1)
-                // Don't prevent login if max sessions reached (invalidate old session)
                 .maxSessionsPreventsLogin(false)
-                // Handle expired sessions with 401 response
                 .expiredSessionStrategy(event -> {
                     var response = event.getResponse();
                     response.setStatus(401);
@@ -64,8 +74,7 @@ public class SecurityConfig {
                     );
                 })
             )
-            
-            // Configure logout
+
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
                 .invalidateHttpSession(true)
@@ -80,8 +89,7 @@ public class SecurityConfig {
                     );
                 })
             )
-            
-            // Return 401 for unauthenticated requests
+
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(401);
@@ -94,31 +102,32 @@ public class SecurityConfig {
                         "\"path\":\"" + request.getRequestURI() + "\"}"
                     );
                 })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    response.getWriter().write(
+                        "{\"timestamp\":\"" + java.time.Instant.now() + "\"," +
+                        "\"status\":403," +
+                        "\"error\":\"Forbidden\"," +
+                        "\"message\":\"Access denied: insufficient role\"," +
+                        "\"path\":\"" + request.getRequestURI() + "\"}"
+                    );
+                })
             );
-        
+
         return http.build();
     }
 
-    /**
-     * Password encoder using BCrypt hashing algorithm.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Authentication manager for handling authentication requests.
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    /**
-     * Session event publisher for tracking session lifecycle events.
-     * Required for session timeout handling.
-     */
     @Bean
     public HttpSessionEventPublisher httpSessionEventPublisher() {
         return new HttpSessionEventPublisher();

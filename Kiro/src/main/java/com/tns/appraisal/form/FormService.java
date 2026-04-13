@@ -53,7 +53,7 @@ public class FormService {
      */
     @Transactional(readOnly = true)
     public FormDetailDto getMyForm(Long userId) {
-        List<AppraisalForm> forms = formRepository.findByEmployeeIdOrderByCreatedAtDesc(userId);
+        List<AppraisalForm> forms = formRepository.findByEmployeeIdWithRelations(userId);
         AppraisalForm form = forms.stream()
             .filter(f -> f.getStatus() != FormStatus.REVIEWED_AND_COMPLETED)
             .findFirst()
@@ -89,7 +89,7 @@ public class FormService {
         if (isHrOrAdmin(roles)) {
             forms = formRepository.findAll();
         } else {
-            forms = formRepository.findByEmployeeIdOrderByCreatedAtDesc(userId);
+            forms = formRepository.findByEmployeeIdWithRelations(userId);
         }
         return forms.stream().map(this::toSummaryDto).collect(Collectors.toList());
     }
@@ -306,7 +306,7 @@ public class FormService {
     // -------------------------------------------------------------------------
 
     private AppraisalForm findFormOrThrow(Long formId) {
-        return formRepository.findById(formId)
+        return formRepository.findByIdWithRelations(formId)
             .orElseThrow(() -> new ResourceNotFoundException(ENTITY_TYPE, formId));
     }
 
@@ -507,8 +507,12 @@ public class FormService {
         FormDetailDto dto = new FormDetailDto();
         dto.setId(form.getId());
         dto.setCycleId(form.getCycleId());
+        dto.setCycleName(form.getCycle() != null ? form.getCycle().getName() : null);
         dto.setEmployeeId(form.getEmployeeId());
+        dto.setEmployeeName(form.getEmployee() != null ? form.getEmployee().getFullName() : null);
+        dto.setDesignation(form.getEmployee() != null ? form.getEmployee().getDesignation() : null);
         dto.setManagerId(form.getManagerId());
+        dto.setManagerName(form.getManager() != null ? form.getManager().getFullName() : null);
         dto.setBackupReviewerId(form.getBackupReviewerId());
         dto.setTemplateId(form.getTemplateId());
         dto.setStatus(form.getStatus());

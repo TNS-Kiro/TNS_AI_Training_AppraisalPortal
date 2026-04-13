@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { EmployeeDashboard, ManagerDashboard, HRDashboard } from '../models/dashboard.model';
+import { ApiResponse } from '../models/api-response.model';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -16,23 +17,23 @@ export class DashboardService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get employee dashboard data (current form + historical forms)
+   * Get employee dashboard data
    */
-  getEmployeeDashboard(): Observable<EmployeeDashboard> {
-    return this.http.get<EmployeeDashboard>(`${this.API_URL}/employee`);
+  getEmployeeDashboard(): Observable<ApiResponse<EmployeeDashboard>> {
+    return this.http.get<ApiResponse<EmployeeDashboard>>(`${this.API_URL}/employee`);
   }
 
   /**
-   * Get manager dashboard data (own form + team forms + metrics)
+   * Get manager dashboard data
    */
-  getManagerDashboard(): Observable<ManagerDashboard> {
-    return this.http.get<ManagerDashboard>(`${this.API_URL}/manager`);
+  getManagerDashboard(): Observable<ApiResponse<ManagerDashboard>> {
+    return this.http.get<ApiResponse<ManagerDashboard>>(`${this.API_URL}/manager`);
   }
 
   /**
-   * Get HR dashboard data (org-wide metrics + department progress)
+   * Get HR dashboard data
    */
-  getHRDashboard(): Observable<HRDashboard> {
-    return this.http.get<HRDashboard>(`${this.API_URL}/hr`);
+  getHRDashboard(): Observable<ApiResponse<HRDashboard>> {
+    return this.http.get<ApiResponse<HRDashboard>>(`${this.API_URL}/hr`);
   }
 }

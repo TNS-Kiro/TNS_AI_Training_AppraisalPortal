@@ -9,13 +9,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 import { FormRendererService } from '../../form-renderer/form-renderer.service';
 import { AppraisalForm, FormData, AppraisalTemplate } from '../../core/models/appraisal.model';
 import { AuthService } from '../../core/services/auth.service';
 import { DialogService } from '../../shared/services/dialog.service';
+import { environment } from '../../../environments/environment';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 
 import { HeaderSectionComponent } from '../../form-renderer/sections/header-section.component';
@@ -120,7 +121,7 @@ import { FormNavigationComponent } from '../../form-renderer/form-navigation.com
 
           <app-key-responsibilities-section
             [formGroup]="formGroup"
-            [items]="getKeyResponsibilitiesItems()"
+            [items]="keyResponsibilitiesItems"
             [readonly]="readonly"
             [canEditSelf]="canEditSelfFields"
             [canEditManager]="false">
@@ -128,7 +129,7 @@ import { FormNavigationComponent } from '../../form-renderer/form-navigation.com
 
           <app-idp-section
             [formGroup]="formGroup"
-            [items]="getIdpItems()"
+            [items]="idpItems"
             [readonly]="readonly"
             [canEditSelf]="canEditSelfFields"
             [canEditManager]="false">
@@ -142,7 +143,7 @@ import { FormNavigationComponent } from '../../form-renderer/form-navigation.com
 
           <app-goals-section
             [formGroup]="formGroup"
-            [items]="getGoalsItems()"
+            [items]="goalsItems"
             [readonly]="readonly"
             [canEditSelf]="canEditSelfFields"
             [canEditManager]="false">
@@ -250,6 +251,10 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
   canSaveDraft = false;
   canSubmit = false;
 
+  keyResponsibilitiesItems: any[] = [];
+  idpItems: any[] = [];
+  goalsItems: any[] = [];
+
   private destroy$ = new Subject<void>();
   private formId: number | null = null;
   private autoSaveInterval: any;
@@ -295,10 +300,11 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.http.get<AppraisalForm>(`/api/forms/${this.formId}`)
+    this.http.get<any>(`${environment.apiUrl}/forms/${this.formId}`)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (form) => {
+        next: (response) => {
+          const form = response.data || response;
           this.appraisalForm = form;
           this.formData = form.formData || {};
           this.loadTemplate(form.templateId);
@@ -312,11 +318,11 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
   }
 
   private loadTemplate(templateId: number): void {
-    this.http.get<AppraisalTemplate>(`/api/templates/${templateId}`)
+    this.http.get<any>(`${environment.apiUrl}/templates/${templateId}`)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (template) => {
-          this.template = template;
+        next: (response) => {
+          this.template = response.data || response;
           this.initializeForm();
           this.loading = false;
         },
@@ -332,6 +338,10 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
 
     const schema = this.formRendererService.parseTemplateSchema(this.template.schemaJson);
 
+    this.keyResponsibilitiesItems = schema.sections.find(s => s.sectionType === 'key_responsibilities')?.items || [];
+    this.idpItems = schema.sections.find(s => s.sectionType === 'idp')?.items || [];
+    this.goalsItems = schema.sections.find(s => s.sectionType === 'goals')?.items || [];
+
     const controls: Record<string, any> = {
       header: new FormGroup({
         dateOfHire:   new FormControl(this.formData.header?.dateOfHire || ''),
@@ -341,10 +351,9 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
       })
     };
 
-    const krSection = schema.sections.find(s => s.sectionType === 'key_responsibilities');
-    if (krSection?.items) {
+    if (this.keyResponsibilitiesItems.length > 0) {
       controls['keyResponsibilities'] = new FormArray(
-        krSection.items.map((item, idx) => {
+        this.keyResponsibilitiesItems.map((item, idx) => {
           const existing = this.formData.keyResponsibilities?.[idx];
           return new FormGroup({
             itemId:      new FormControl(item.id),
@@ -357,10 +366,9 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
       );
     }
 
-    const idpSection = schema.sections.find(s => s.sectionType === 'idp');
-    if (idpSection?.items) {
+    if (this.idpItems.length > 0) {
       controls['idp'] = new FormArray(
-        idpSection.items.map((item, idx) => {
+        this.idpItems.map((item, idx) => {
           const existing = this.formData.idp?.[idx];
           return new FormGroup({
             itemId:      new FormControl(item.id),
@@ -373,10 +381,9 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
       );
     }
 
-    const goalsSection = schema.sections.find(s => s.sectionType === 'goals');
-    if (goalsSection?.items) {
+    if (this.goalsItems.length > 0) {
       controls['goals'] = new FormArray(
-        goalsSection.items.map((item, idx) => {
+        this.goalsItems.map((item, idx) => {
           const existing = this.formData.goals?.[idx];
           return new FormGroup({
             itemId:      new FormControl(item.id),
@@ -436,7 +443,7 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
     this.saving = true;
     const draftData = this.collectFormData();
 
-    this.http.put(`/api/forms/${this.formId}/draft`, { formData: draftData })
+    this.http.put(`${environment.apiUrl}/forms/${this.formId}/draft`, { formData: draftData })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -463,22 +470,22 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const confirmed = await this.dialogService.confirm(
-      'Submit Self-Appraisal',
-      'Are you sure you want to submit your self-appraisal? You will not be able to edit it after submission.',
-      'Submit',
-      'Cancel'
-    );
+    const confirmed = await firstValueFrom(this.dialogService.confirm({
+      title: 'Submit Self-Appraisal',
+      message: 'Are you sure you want to submit your self-appraisal? You will not be able to edit it after submission.',
+      confirmText: 'Submit',
+      cancelText: 'Cancel'
+    }));
 
     if (!confirmed) return;
 
     this.saving = true;
 
-    this.http.put(`/api/forms/${this.formId}/draft`, { formData: draftData })
+    this.http.put(`${environment.apiUrl}/forms/${this.formId}/draft`, { formData: draftData })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.http.post(`/api/forms/${this.formId}/submit`, {})
+          this.http.post(`${environment.apiUrl}/forms/${this.formId}/submit`, {})
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: () => {
@@ -502,12 +509,12 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     if (this.formGroup.dirty) {
-      this.dialogService.confirm(
-        'Unsaved Changes',
-        'You have unsaved changes. Are you sure you want to leave?',
-        'Leave',
-        'Stay'
-      ).then(confirmed => {
+      this.dialogService.confirm({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Are you sure you want to leave?',
+        confirmText: 'Leave',
+        cancelText: 'Stay'
+      }).subscribe(confirmed => {
         if (confirmed) this.router.navigate(['/manager/dashboard']);
       });
     } else {

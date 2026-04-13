@@ -11,13 +11,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 import { FormRendererService } from '../../form-renderer/form-renderer.service';
 import { AppraisalForm, FormData, AppraisalTemplate, FormStatus } from '../../core/models/appraisal.model';
 import { AuthService } from '../../core/services/auth.service';
 import { DialogService } from '../../shared/services/dialog.service';
+import { environment } from '../../../environments/environment';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 
 import { HeaderSectionComponent } from '../../form-renderer/sections/header-section.component';
@@ -151,7 +152,7 @@ import { FieldEditability } from '../../form-renderer/form-renderer.models';
 
           <app-key-responsibilities-section
             [formGroup]="formGroup"
-            [items]="getKeyResponsibilitiesItems()"
+            [items]="keyResponsibilitiesItems"
             [readonly]="readonly"
             [canEditSelf]="false"
             [canEditManager]="canEditManagerFields">
@@ -159,7 +160,7 @@ import { FieldEditability } from '../../form-renderer/form-renderer.models';
 
           <app-idp-section
             [formGroup]="formGroup"
-            [items]="getIdpItems()"
+            [items]="idpItems"
             [readonly]="readonly"
             [canEditSelf]="false"
             [canEditManager]="canEditManagerFields">
@@ -167,13 +168,13 @@ import { FieldEditability } from '../../form-renderer/form-renderer.models';
 
           <app-policy-adherence-section
             [formGroup]="formGroup"
-            [items]="getPolicyAdherenceItems()"
+            [items]="policyAdherenceItems"
             [editability]="fieldEditability">
           </app-policy-adherence-section>
 
           <app-goals-section
             [formGroup]="formGroup"
-            [items]="getGoalsItems()"
+            [items]="goalsItems"
             [readonly]="readonly"
             [canEditSelf]="false"
             [canEditManager]="canEditManagerFields">
@@ -338,6 +339,11 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
   canSaveReviewDraft = false;
   canCompleteReview = false;
 
+  keyResponsibilitiesItems: any[] = [];
+  idpItems: any[] = [];
+  goalsItems: any[] = [];
+  policyAdherenceItems: any[] = [];
+
   fieldEditability: FieldEditability = {
     selfCommentEditable: false,
     selfRatingEditable: false,
@@ -381,10 +387,11 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.http.get<AppraisalForm>(`/api/forms/${this.formId}`)
+    this.http.get<any>(`${environment.apiUrl}/forms/${this.formId}`)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (form) => {
+        next: (response) => {
+          const form = response.data || response;
           this.appraisalForm = form;
           this.formData = form.formData || {};
           this.loadTemplate(form.templateId);
@@ -398,11 +405,11 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
   }
 
   private loadTemplate(templateId: number): void {
-    this.http.get<AppraisalTemplate>(`/api/templates/${templateId}`)
+    this.http.get<any>(`${environment.apiUrl}/templates/${templateId}`)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (template) => {
-          this.template = template;
+        next: (response) => {
+          this.template = response.data || response;
           this.initializeForm();
           this.loading = false;
         },
@@ -418,6 +425,11 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
 
     const schema = this.formRendererService.parseTemplateSchema(this.template.schemaJson);
 
+    this.keyResponsibilitiesItems = schema.sections.find(s => s.sectionType === 'key_responsibilities')?.items || [];
+    this.idpItems = schema.sections.find(s => s.sectionType === 'idp')?.items || [];
+    this.goalsItems = schema.sections.find(s => s.sectionType === 'goals')?.items || [];
+    this.policyAdherenceItems = schema.sections.find(s => s.sectionType === 'policy_adherence')?.items || [];
+
     const controls: Record<string, any> = {
       header: new FormGroup({
         dateOfHire:   new FormControl(this.formData.header?.dateOfHire || ''),
@@ -432,10 +444,9 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
     };
 
     // Key Responsibilities
-    const krSection = schema.sections.find(s => s.sectionType === 'key_responsibilities');
-    if (krSection?.items) {
+    if (this.keyResponsibilitiesItems.length > 0) {
       controls['keyResponsibilities'] = new FormArray(
-        krSection.items.map((item, idx) => {
+        this.keyResponsibilitiesItems.map((item, idx) => {
           const existing = this.formData.keyResponsibilities?.[idx];
           return new FormGroup({
             itemId:         new FormControl(item.id),
@@ -449,10 +460,9 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
     }
 
     // IDP
-    const idpSection = schema.sections.find(s => s.sectionType === 'idp');
-    if (idpSection?.items) {
+    if (this.idpItems.length > 0) {
       controls['idp'] = new FormArray(
-        idpSection.items.map((item, idx) => {
+        this.idpItems.map((item, idx) => {
           const existing = this.formData.idp?.[idx];
           return new FormGroup({
             itemId:         new FormControl(item.id),
@@ -466,10 +476,9 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
     }
 
     // Goals
-    const goalsSection = schema.sections.find(s => s.sectionType === 'goals');
-    if (goalsSection?.items) {
+    if (this.goalsItems.length > 0) {
       controls['goals'] = new FormArray(
-        goalsSection.items.map((item, idx) => {
+        this.goalsItems.map((item, idx) => {
           const existing = this.formData.goals?.[idx];
           return new FormGroup({
             itemId:         new FormControl(item.id),
@@ -519,7 +528,7 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
     this.canEditManagerFields = editability.managerCommentEditable && !this.readonly;
 
     // Save draft is only available when the form is actively under review
-    const saveDraftStatuses: FormStatus[] = ['UNDER_REVIEW', 'REVIEW_DRAFT_SAVED'];
+    const saveDraftStatuses: FormStatus[] = ['SUBMITTED', 'UNDER_REVIEW', 'REVIEW_DRAFT_SAVED'];
     this.canSaveReviewDraft = this.canEditManagerFields &&
       saveDraftStatuses.includes(this.appraisalForm.status);
 
@@ -567,7 +576,7 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
     this.saving = true;
     const reviewData = this.collectReviewData();
 
-    this.http.put(`/api/forms/${this.formId}/review/draft`, { formData: reviewData })
+    this.http.put(`${environment.apiUrl}/forms/${this.formId}/review/draft`, { formData: reviewData })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -597,23 +606,23 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const confirmed = await this.dialogService.confirm(
-      'Complete Review',
-      'Are you sure you want to complete this review? A PDF will be generated and notifications will be sent to the employee, manager, and HR.',
-      'Complete Review',
-      'Cancel'
-    );
+    const confirmed = await firstValueFrom(this.dialogService.confirm({
+      title: 'Complete Review',
+      message: 'Are you sure you want to complete this review? A PDF will be generated and notifications will be sent to the employee, manager, and HR.',
+      confirmText: 'Complete Review',
+      cancelText: 'Cancel'
+    }));
 
     if (!confirmed) return;
 
     this.saving = true;
 
     // Save draft first, then complete
-    this.http.put(`/api/forms/${this.formId}/review/draft`, { formData: reviewData })
+    this.http.put(`${environment.apiUrl}/forms/${this.formId}/review/draft`, { formData: reviewData })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.http.post(`/api/forms/${this.formId}/review/complete`, {})
+          this.http.post(`${environment.apiUrl}/forms/${this.formId}/review/complete`, {})
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: () => {
@@ -636,12 +645,12 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     if (this.formGroup.dirty) {
-      this.dialogService.confirm(
-        'Unsaved Changes',
-        'You have unsaved changes. Are you sure you want to leave?',
-        'Leave',
-        'Stay'
-      ).then(confirmed => {
+      this.dialogService.confirm({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Are you sure you want to leave?',
+        confirmText: 'Leave',
+        cancelText: 'Stay'
+      }).subscribe(confirmed => {
         if (confirmed) this.router.navigate(['/manager/dashboard']);
       });
     } else {
