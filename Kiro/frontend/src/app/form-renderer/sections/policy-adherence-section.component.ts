@@ -33,7 +33,7 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
               <mat-label>Manager Rating (1-10)</mat-label>
               <mat-select 
                 formControlName="managerRating"
-                [disabled]="!editability.managerRatingEditable">
+                [disabled]="!canEditManager">
                 <mat-option *ngFor="let rating of ratingOptions" [value]="rating">
                   {{ rating }}
                 </mat-option>
@@ -48,7 +48,7 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
             matInput 
             formControlName="managerComments"
             rows="4"
-            [readonly]="!editability.managerCommentEditable">
+            [readonly]="!canEditManager">
           </textarea>
         </mat-form-field>
       </div>

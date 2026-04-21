@@ -106,6 +106,28 @@ import { FormStatus } from '../core/models';
           <mat-icon>arrow_forward</mat-icon>
         </button>
       </div>
+
+      <!-- Action Buttons -->
+      <div class="action-controls" *ngIf="!readonly">
+        <button mat-stroked-button color="primary"
+                *ngIf="canSaveDraft"
+                [disabled]="saving"
+                (click)="saveDraft.emit()">
+          <mat-icon>save</mat-icon>
+          {{ saving ? 'Saving...' : 'Save Draft' }}
+        </button>
+        <button mat-raised-button color="primary"
+                *ngIf="canSubmit"
+                [disabled]="saving"
+                (click)="submit.emit()">
+          <mat-icon>send</mat-icon>
+          Submit Appraisal
+        </button>
+        <button mat-stroked-button (click)="cancel.emit()">
+          <mat-icon>cancel</mat-icon>
+          Cancel
+        </button>
+      </div>
     </div>
   `,
   styles: [`
@@ -239,6 +261,16 @@ import { FormStatus } from '../core/models';
       align-items: center;
       padding-top: 16px;
       border-top: 1px solid #e0e0e0;
+    }
+
+    .action-controls {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding-top: 16px;
+      margin-top: 8px;
+      border-top: 1px solid #e0e0e0;
+      flex-wrap: wrap;
     }
 
     .current-section-indicator {

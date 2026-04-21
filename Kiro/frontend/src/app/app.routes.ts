@@ -24,13 +24,13 @@ export const routes: Routes = [
     path: 'employee/appraisal/:id',
     loadComponent: () => import('./features/employee/self-appraisal-form.component').then(m => m.SelfAppraisalFormComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['EMPLOYEE', 'MANAGER'] }
+    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
   },
   {
     path: 'employee/history',
     loadComponent: () => import('./features/employee/historical-forms-viewer.component').then(m => m.HistoricalFormsViewerComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['EMPLOYEE', 'MANAGER'] }
+    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
   },
 
   // Manager routes

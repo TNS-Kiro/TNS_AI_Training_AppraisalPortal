@@ -26,17 +26,18 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
           
           <div class="item-grid" [formGroup]="getItemFormGroup(i)">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Team Member Comments</mat-label>
+              <mat-label>Team Member Comments <span class="required-star" *ngIf="canEditSelf">*</span></mat-label>
               <textarea 
                 matInput 
                 formControlName="selfComment"
                 rows="3"
                 [readonly]="readonly || !canEditSelf">
               </textarea>
+              <mat-hint *ngIf="canEditSelf">Required</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Self Rating</mat-label>
+              <mat-label>Self Rating <span class="required-star" *ngIf="canEditSelf">*</span></mat-label>
               <mat-select 
                 formControlName="selfRating"
                 [disabled]="readonly || !canEditSelf">
@@ -44,6 +45,7 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
                   {{ rating }}
                 </mat-option>
               </mat-select>
+              <mat-hint *ngIf="canEditSelf">Required</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
@@ -108,8 +110,9 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
       grid-column: 1 / -1;
     }
 
-    mat-form-field {
-      width: 100%;
+    .required-star {
+      color: #d32f2f;
+      font-weight: bold;
     }
   `]
 })

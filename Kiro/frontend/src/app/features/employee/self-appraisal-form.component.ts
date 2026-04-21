@@ -519,7 +519,16 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
     const updatedFormData = this.collectFormData();
     const validation = this.formRendererService.validateForEmployeeSubmission(updatedFormData);
     if (!validation.valid) {
-      this.snackBar.open('Please complete all required fields before submitting', 'Close', { duration: 5000 });
+      // Build a specific error message listing which fields are missing
+      const errorMessages: string[] = [];
+      const errs = validation.errors;
+      if (errs.keyResponsibilities) errorMessages.push(`Key Responsibilities: ${errs.keyResponsibilities}`);
+      if (errs.idp) errorMessages.push(`IDP: ${errs.idp}`);
+      if (errs.goals) errorMessages.push(`Goals: ${errs.goals}`);
+      const msg = errorMessages.length > 0
+        ? `Required fields missing — ${errorMessages.join(' | ')}`
+        : 'Please complete all required fields (marked with *) before submitting';
+      this.snackBar.open(msg, 'Close', { duration: 8000 });
       return;
     }
 

@@ -27,7 +27,7 @@ import { FieldEditability } from '../form-renderer.models';
             <input 
               matInput 
               formControlName="preparedBy"
-              [readonly]="!editability.managerCommentEditable">
+              [readonly]="!canEditManager">
           </mat-form-field>
 
           <mat-form-field appearance="outline">
@@ -35,7 +35,7 @@ import { FieldEditability } from '../form-renderer.models';
             <input 
               matInput 
               formControlName="reviewedBy"
-              [readonly]="!editability.managerCommentEditable">
+              [readonly]="!canEditManager">
           </mat-form-field>
         </div>
 
@@ -49,7 +49,7 @@ import { FieldEditability } from '../form-renderer.models';
               formControlName="teamMemberAcknowledgement"
               rows="4"
               placeholder="I acknowledge that I have reviewed this appraisal..."
-              [readonly]="!editability.selfCommentEditable">
+              [readonly]="!canEditSelf">
             </textarea>
           </mat-form-field>
         </div>
