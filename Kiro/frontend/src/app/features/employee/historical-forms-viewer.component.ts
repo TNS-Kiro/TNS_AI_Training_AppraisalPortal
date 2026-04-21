@@ -467,6 +467,6 @@ export class HistoricalFormsViewerComponent implements OnInit {
   }
 
   goToDashboard(): void {
-    this.router.navigate(['/employee/dashboard']);
+    this.router.navigate(['/employee']);
   }
 }

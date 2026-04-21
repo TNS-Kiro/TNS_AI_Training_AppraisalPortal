@@ -492,7 +492,7 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
                 this.saving = false;
                 this.formGroup.markAsPristine();
                 this.snackBar.open('Self-appraisal submitted successfully', 'Close', { duration: 3000 });
-                this.router.navigate(['/manager/dashboard']);
+                this.router.navigate(['/manager']);
               },
               error: () => {
                 this.saving = false;
@@ -515,10 +515,10 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
         confirmText: 'Leave',
         cancelText: 'Stay'
       }).subscribe(confirmed => {
-        if (confirmed) this.router.navigate(['/manager/dashboard']);
+        if (confirmed) this.router.navigate(['/manager']);
       });
     } else {
-      this.router.navigate(['/manager/dashboard']);
+      this.router.navigate(['/manager']);
     }
   }
 

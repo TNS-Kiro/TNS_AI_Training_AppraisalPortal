@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormGroup, FormControl, ReactiveFormsModule, FormArray, FormsModule } from '@angular/forms';
+import { FormGroup, FormControl, ReactiveFormsModule, FormArray, FormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -140,7 +140,7 @@ import { FormNavigationComponent } from '../../form-renderer/form-navigation.com
 
           <!-- Policy Adherence Section -->
           <app-policy-adherence-section
-            [formGroup]="formGroup"
+            [formGroup]="getPolicyAdherenceGroup()"
             [readonly]="readonly"
             [canEditManager]="false">
           </app-policy-adherence-section>
@@ -156,7 +156,7 @@ import { FormNavigationComponent } from '../../form-renderer/form-navigation.com
 
           <!-- Signature Section -->
           <app-signature-section
-            [formGroup]="formGroup"
+            [formGroup]="getSignatureGroup()"
             [readonly]="readonly"
             [canEditSelf]="canEditSelfFields"
             [canEditManager]="false">
@@ -284,6 +284,7 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
   canEditSelfFields = false;
   canSaveDraft = false;
   canSubmit = false;
+  validationAttempted = false;
 
   keyResponsibilitiesItems: any[] = [];
   idpItems: any[] = [];
@@ -399,8 +400,8 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
           const existing = this.formData.keyResponsibilities?.[idx];
           return new FormGroup({
             itemId: new FormControl(item.id),
-            selfComment: new FormControl(existing?.selfComment || ''),
-            selfRating: new FormControl(existing?.selfRating || ''),
+            selfComment: new FormControl(existing?.selfComment || '', [Validators.required]),
+            selfRating: new FormControl(existing?.selfRating || '', [Validators.required]),
             managerComment: new FormControl(existing?.managerComment || ''),
             managerRating: new FormControl(existing?.managerRating || '')
           });
@@ -416,8 +417,8 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
           const existing = this.formData.idp?.[idx];
           return new FormGroup({
             itemId: new FormControl(item.id),
-            selfComment: new FormControl(existing?.selfComment || ''),
-            selfRating: new FormControl(existing?.selfRating || ''),
+            selfComment: new FormControl(existing?.selfComment || '', [Validators.required]),
+            selfRating: new FormControl(existing?.selfRating || '', [Validators.required]),
             managerComment: new FormControl(existing?.managerComment || ''),
             managerRating: new FormControl(existing?.managerRating || '')
           });
@@ -433,8 +434,8 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
           const existing = this.formData.goals?.[idx];
           return new FormGroup({
             itemId: new FormControl(item.id),
-            selfComment: new FormControl(existing?.selfComment || ''),
-            selfRating: new FormControl(existing?.selfRating || ''),
+            selfComment: new FormControl(existing?.selfComment || '', [Validators.required]),
+            selfRating: new FormControl(existing?.selfRating || '', [Validators.required]),
             managerComment: new FormControl(existing?.managerComment || ''),
             managerRating: new FormControl(existing?.managerRating || '')
           });
@@ -446,6 +447,18 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
     // Initialize other fields
     controls.nextYearGoals = new FormControl(this.formData.nextYearGoals || '');
     controls.teamMemberComments = new FormControl(this.formData.overallEvaluation?.teamMemberComments || '');
+
+    // Initialize Policy Adherence (manager-only fields, read-only for employee)
+    controls.policyAdherence = new FormGroup({
+      managerComments: new FormControl(this.formData.policyAdherence?.managerComments || '')
+    });
+
+    // Initialize Signature
+    controls.signature = new FormGroup({
+      preparedBy: new FormControl(this.formData.signature?.preparedBy || ''),
+      reviewedBy: new FormControl(this.formData.signature?.reviewedBy || ''),
+      teamMemberAcknowledgement: new FormControl(this.formData.signature?.teamMemberAcknowledgement || '')
+    });
 
     this.formGroup = new FormGroup(controls);
   }
@@ -515,11 +528,14 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
   async onSubmit(): Promise<void> {
     if (!this.canSubmit || this.saving) return;
 
+    // Mark all fields touched so inline errors appear
+    this.validationAttempted = true;
+    this.markAllTouched(this.formGroup);
+
     // Validate before showing confirmation
     const updatedFormData = this.collectFormData();
     const validation = this.formRendererService.validateForEmployeeSubmission(updatedFormData);
     if (!validation.valid) {
-      // Build a specific error message listing which fields are missing
       const errorMessages: string[] = [];
       const errs = validation.errors;
       if (errs.keyResponsibilities) errorMessages.push(`Key Responsibilities: ${errs.keyResponsibilities}`);
@@ -528,7 +544,15 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
       const msg = errorMessages.length > 0
         ? `Required fields missing — ${errorMessages.join(' | ')}`
         : 'Please complete all required fields (marked with *) before submitting';
-      this.snackBar.open(msg, 'Close', { duration: 8000 });
+      this.snackBar.open(msg, 'Close', {
+        duration: 8000,
+        panelClass: ['snack-error']
+      });
+      // Scroll to first invalid field
+      setTimeout(() => {
+        const firstInvalid = document.querySelector('.mat-form-field-invalid, .ng-invalid.ng-touched');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
 
@@ -556,7 +580,7 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
                 this.saving = false;
                 this.formGroup.markAsPristine();
                 this.snackBar.open('Appraisal submitted successfully', 'Close', { duration: 3000 });
-                this.router.navigate(['/employee/dashboard']);
+                this.router.navigate(['/employee']);
               },
               error: (err) => {
                 this.saving = false;
@@ -582,11 +606,11 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
         cancelText: 'Stay'
       }).subscribe(confirmed => {
         if (confirmed) {
-          this.router.navigate(['/employee/dashboard']);
+          this.router.navigate(['/employee']);
         }
       });
     } else {
-      this.router.navigate(['/employee/dashboard']);
+      this.router.navigate(['/employee']);
     }
   }
 
@@ -604,17 +628,17 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
       keyResponsibilities: (formValue.keyResponsibilities || []).map((item: any) => ({
         itemId: item.itemId,
         selfComment: item.selfComment || '',
-        selfRating: item.selfRating || ''
+        selfRating: item.selfRating || null
       })),
       idp: (formValue.idp || []).map((item: any) => ({
         itemId: item.itemId,
         selfComment: item.selfComment || '',
-        selfRating: item.selfRating || ''
+        selfRating: item.selfRating || null
       })),
       goals: (formValue.goals || []).map((item: any) => ({
         itemId: item.itemId,
         selfComment: item.selfComment || '',
-        selfRating: item.selfRating || ''
+        selfRating: item.selfRating || null
       })),
       nextYearGoals: formValue.nextYearGoals || '',
       teamMemberComments: formValue.teamMemberComments || ''
@@ -633,5 +657,30 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
       'REVIEWED_AND_COMPLETED': 'Completed'
     };
     return labels[status] || status;
+  }
+
+  /** Recursively mark every control in a FormGroup/FormArray as touched. */
+  private markAllTouched(control: FormGroup | FormArray): void {
+    Object.values(control.controls).forEach(c => {
+      c.markAsTouched();
+      c.markAsDirty();
+      if (c instanceof FormGroup || c instanceof FormArray) {
+        this.markAllTouched(c as FormGroup | FormArray);
+      }
+    });
+  }
+
+  getPolicyAdherenceGroup(): FormGroup {
+    return (this.formGroup.get('policyAdherence') as FormGroup) || new FormGroup({
+      managerComments: new FormControl('')
+    });
+  }
+
+  getSignatureGroup(): FormGroup {
+    return (this.formGroup.get('signature') as FormGroup) || new FormGroup({
+      preparedBy: new FormControl(''),
+      reviewedBy: new FormControl(''),
+      teamMemberAcknowledgement: new FormControl('')
+    });
   }
 }

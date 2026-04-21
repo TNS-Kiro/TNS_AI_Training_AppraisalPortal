@@ -28,26 +28,27 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
             
             <div class="item-grid" [formGroup]="getItemFormGroup(i)">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Team Member Comments <span class="required-star" *ngIf="canEditSelf">*</span></mat-label>
+                <mat-label>Team Member Comments</mat-label>
                 <textarea 
                   matInput 
                   formControlName="selfComment"
-                  rows="3"
-                  [readonly]="readonly || !canEditSelf">
+                  rows="3">
                 </textarea>
-                <mat-hint *ngIf="canEditSelf">Required</mat-hint>
+                <mat-error *ngIf="getItemFormGroup(i).get('selfComment')?.hasError('required')">
+                  Comment is required
+                </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
-                <mat-label>Self Rating <span class="required-star" *ngIf="canEditSelf">*</span></mat-label>
-                <mat-select 
-                  formControlName="selfRating"
-                  [disabled]="readonly || !canEditSelf">
+                <mat-label>Self Rating</mat-label>
+                <mat-select formControlName="selfRating">
                   <mat-option *ngFor="let rating of ratingOptions" [value]="rating">
                     {{ rating }}
                   </mat-option>
                 </mat-select>
-                <mat-hint *ngIf="canEditSelf">Required</mat-hint>
+                <mat-error *ngIf="getItemFormGroup(i).get('selfRating')?.hasError('required')">
+                  Rating is required
+                </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
@@ -55,16 +56,13 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
                 <textarea 
                   matInput 
                   formControlName="managerComment"
-                  rows="3"
-                  [readonly]="readonly || !canEditManager">
+                  rows="3">
                 </textarea>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Manager Rating</mat-label>
-                <mat-select 
-                  formControlName="managerRating"
-                  [disabled]="readonly || !canEditManager">
+                <mat-select formControlName="managerRating">
                   <mat-option *ngFor="let rating of ratingOptions" [value]="rating">
                     {{ rating }}
                   </mat-option>
@@ -152,9 +150,14 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
       width: 100%;
     }
 
-    .required-star {
+    :host ::ng-deep .mat-mdc-form-field-error {
       color: #d32f2f;
-      font-weight: bold;
+    }
+
+    :host ::ng-deep .mat-mdc-form-field.mat-form-field-invalid .mdc-notched-outline__leading,
+    :host ::ng-deep .mat-mdc-form-field.mat-form-field-invalid .mdc-notched-outline__notch,
+    :host ::ng-deep .mat-mdc-form-field.mat-form-field-invalid .mdc-notched-outline__trailing {
+      border-color: #d32f2f !important;
     }
   `]
 })

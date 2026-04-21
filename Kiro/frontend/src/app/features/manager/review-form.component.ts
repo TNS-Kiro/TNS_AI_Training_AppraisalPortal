@@ -628,7 +628,7 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
               next: () => {
                 this.saving = false;
                 this.snackBar.open('Review completed successfully. Notifications have been sent.', 'Close', { duration: 4000 });
-                this.router.navigate(['/manager/dashboard']);
+                this.router.navigate(['/manager']);
               },
               error: () => {
                 this.saving = false;
@@ -651,10 +651,10 @@ export class ReviewFormComponent implements OnInit, OnDestroy {
         confirmText: 'Leave',
         cancelText: 'Stay'
       }).subscribe(confirmed => {
-        if (confirmed) this.router.navigate(['/manager/dashboard']);
+        if (confirmed) this.router.navigate(['/manager']);
       });
     } else {
-      this.router.navigate(['/manager/dashboard']);
+      this.router.navigate(['/manager']);
     }
   }
 

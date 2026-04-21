@@ -27,13 +27,10 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
             <span class="item-number">{{ i + 1 }}.</span>
             <h3 class="item-label">{{ item.label }}</h3>
           </div>
-          
-          <div class="item-grid" [formGroupName]="i">
+          <div class="item-grid">
             <mat-form-field appearance="outline">
               <mat-label>Manager Rating (1-10)</mat-label>
-              <mat-select 
-                formControlName="managerRating"
-                [disabled]="!canEditManager">
+              <mat-select [disabled]="true">
                 <mat-option *ngFor="let rating of ratingOptions" [value]="rating">
                   {{ rating }}
                 </mat-option>

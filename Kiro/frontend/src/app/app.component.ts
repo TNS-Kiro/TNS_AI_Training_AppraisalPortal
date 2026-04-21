@@ -81,7 +81,12 @@ export class AppComponent {
     { initialValue: this.router.url }
   );
 
-  showLayout = computed(() => this.currentUrl() !== '/login' && this.currentUser() !== null);
+  showLayout = computed(() => {
+    const url = this.currentUrl();
+    const user = this.currentUser();
+    // Show layout for all authenticated routes except login
+    return user !== null && !url.startsWith('/login');
+  });
 
   onLogout(): void {
     this.authService.logout().subscribe({

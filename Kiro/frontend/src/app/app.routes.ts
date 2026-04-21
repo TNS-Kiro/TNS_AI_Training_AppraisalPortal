@@ -3,111 +3,124 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
+  // Default redirect
   {
     path: '',
     redirectTo: '/login',
     pathMatch: 'full'
   },
+
+  // Public: Login
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },
 
-  // Employee routes
+  // ── Employee ──────────────────────────────────────────────────────────────
   {
     path: 'employee',
-    loadComponent: () => import('./features/employee/employee-dashboard.component').then(m => m.EmployeeDashboardComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['EMPLOYEE', 'MANAGER'] }
+    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+    loadComponent: () => import('./features/employee/employee-dashboard.component').then(m => m.EmployeeDashboardComponent)
   },
   {
     path: 'employee/appraisal/:id',
-    loadComponent: () => import('./features/employee/self-appraisal-form.component').then(m => m.SelfAppraisalFormComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
+    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+    loadComponent: () => import('./features/employee/self-appraisal-form.component').then(m => m.SelfAppraisalFormComponent)
   },
   {
     path: 'employee/history',
-    loadComponent: () => import('./features/employee/historical-forms-viewer.component').then(m => m.HistoricalFormsViewerComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
+    data: { roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+    loadComponent: () => import('./features/employee/historical-forms-viewer.component').then(m => m.HistoricalFormsViewerComponent)
   },
 
-  // Manager routes
+  // ── Manager ───────────────────────────────────────────────────────────────
   {
     path: 'manager',
-    loadComponent: () => import('./features/manager/manager-dashboard.component').then(m => m.ManagerDashboardComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['MANAGER'] }
+    data: { roles: ['MANAGER'] },
+    loadComponent: () => import('./features/manager/manager-dashboard.component').then(m => m.ManagerDashboardComponent)
   },
   {
     path: 'manager/appraisal/:id',
-    loadComponent: () => import('./features/manager/manager-self-appraisal.component').then(m => m.ManagerSelfAppraisalComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['MANAGER'] }
+    data: { roles: ['MANAGER'] },
+    loadComponent: () => import('./features/manager/manager-self-appraisal.component').then(m => m.ManagerSelfAppraisalComponent)
   },
   {
     path: 'manager/review/:id',
-    loadComponent: () => import('./features/manager/review-form.component').then(m => m.ReviewFormComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['MANAGER'] }
+    data: { roles: ['MANAGER'] },
+    loadComponent: () => import('./features/manager/review-form.component').then(m => m.ReviewFormComponent)
+  },
+  {
+    path: 'manager/team',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['MANAGER'] },
+    loadComponent: () => import('./features/manager/team-appraisal-list.component').then(m => m.TeamAppraisalListComponent)
   },
 
-  // Admin routes
+  // ── HR ────────────────────────────────────────────────────────────────────
   {
-    path: 'admin/users',
-    loadComponent: () => import('./features/admin/user-management-dashboard.component').then(m => m.UserManagementDashboardComponent),
+    path: 'hr',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN'] }
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/hr-dashboard.component').then(m => m.HrDashboardComponent)
   },
-  {
-    path: 'admin/audit-logs',
-    loadComponent: () => import('./features/admin/audit-log-viewer.component').then(m => m.AuditLogViewerComponent),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN'] }
-  },
-
-  // Phase 2: HR template routes
-  {
-    path: 'hr/templates',
-    loadComponent: () => import('./features/hr/template-list/template-list.component').then(m => m.TemplateListComponent),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['HR', 'ADMIN'] }
-  },
-  {
-    path: 'hr/templates/:id',
-    loadComponent: () => import('./features/hr/template-viewer/template-viewer.component').then(m => m.TemplateViewerComponent),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['HR', 'ADMIN'] }
-  },
-
-  // Phase 2: HR cycle routes
   {
     path: 'hr/cycles',
-    loadComponent: () => import('./features/hr/cycle-dashboard/cycle-dashboard.component').then(m => m.CycleDashboardComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['HR', 'ADMIN'] }
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/cycle-dashboard/cycle-dashboard.component').then(m => m.CycleDashboardComponent)
   },
   {
     path: 'hr/cycles/create',
-    loadComponent: () => import('./features/hr/cycle-create/cycle-create.component').then(m => m.CycleCreateComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['HR'] }
+    data: { roles: ['HR'] },
+    loadComponent: () => import('./features/hr/cycle-create/cycle-create.component').then(m => m.CycleCreateComponent)
   },
   {
     path: 'hr/cycles/:id',
-    loadComponent: () => import('./features/hr/cycle-details/cycle-details.component').then(m => m.CycleDetailsComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['HR', 'ADMIN'] }
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/cycle-details/cycle-details.component').then(m => m.CycleDetailsComponent)
   },
   {
     path: 'hr/cycles/:id/trigger',
-    loadComponent: () => import('./features/hr/cycle-trigger/cycle-trigger.component').then(m => m.CycleTriggerComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['HR'] }
+    data: { roles: ['HR'] },
+    loadComponent: () => import('./features/hr/cycle-trigger/cycle-trigger.component').then(m => m.CycleTriggerComponent)
+  },
+  {
+    path: 'hr/templates',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/template-list/template-list.component').then(m => m.TemplateListComponent)
+  },
+  {
+    path: 'hr/templates/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/template-viewer/template-viewer.component').then(m => m.TemplateViewerComponent)
   },
 
-  // Catch-all redirect
+  // ── Admin ─────────────────────────────────────────────────────────────────
+  {
+    path: 'admin/users',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () => import('./features/admin/user-management-dashboard.component').then(m => m.UserManagementDashboardComponent)
+  },
+  {
+    path: 'admin/audit-logs',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () => import('./features/admin/audit-log-viewer.component').then(m => m.AuditLogViewerComponent)
+  },
+
+  // Catch-all
   {
     path: '**',
     redirectTo: '/login'

@@ -62,9 +62,8 @@ export class LoginComponent {
           this.router.navigate(['/hr/cycles']);
         } else if (roles.includes('MANAGER')) {
           this.router.navigate(['/manager']);
-        } else if (roles.includes('EMPLOYEE')) {
-          this.router.navigate(['/employee']);
         } else {
+          // EMPLOYEE or any other role
           this.router.navigate(['/employee']);
         }
       },
