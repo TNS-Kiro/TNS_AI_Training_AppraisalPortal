@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -20,7 +21,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       } else if (error.status === 0) {
         console.error('Network error: Unable to connect to server');
       }
-
       return throwError(() => error);
     })
   );

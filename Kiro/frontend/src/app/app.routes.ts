@@ -3,12 +3,6 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
-  // Default redirect
-  {
-    path: '',
-    redirectTo: '/login',
-    pathMatch: 'full'
-  },
 
   // Public: Login
   {
@@ -120,9 +114,25 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/audit-log-viewer.component').then(m => m.AuditLogViewerComponent)
   },
 
-  // Catch-all
+  // Phase 4 Features
   {
     path: '**',
-    redirectTo: '/login'
+    redirectTo: '/login',
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'hr/dashboard',
+    loadComponent: () => import('./features/hr/hr-dashboard.component').then(m => m.HrDashboardComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'hr/notifications/logs',
+    loadComponent: () => import('./features/hr/notification-log-viewer.component').then(m => m.NotificationLogViewerComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'hr/notifications/templates',
+    loadComponent: () => import('./features/hr/notification-template-list.component').then(m => m.NotificationTemplateListComponent),
+    canActivate: [authGuard]
   }
 ];

@@ -81,6 +81,10 @@ public class AuditLogService {
      */
     @Transactional(readOnly = true)
     public Page<AuditLog> getAuditLogsForEntity(String entityType, Long entityId, Pageable pageable) {
-        return auditLogRepository.findAll(pageable);
+        return auditLogRepository.findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId)
+            .stream().collect(java.util.stream.Collectors.collectingAndThen(
+                java.util.stream.Collectors.toList(),
+                list -> new org.springframework.data.domain.PageImpl<>(list, pageable, list.size())
+            ));
     }
 }

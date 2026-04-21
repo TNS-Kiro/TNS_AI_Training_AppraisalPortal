@@ -30,3 +30,14 @@ logs/
 
 # Application
 application-local.properties
+
+# Dev artifacts
+.jqwik-database
+dev-appraisal-pdfs/
+appraisal-pdfs/
+*.bat
+
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/cache/

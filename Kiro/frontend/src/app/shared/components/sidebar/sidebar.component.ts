@@ -181,4 +181,26 @@ export class SidebarComponent {
       }))
       .filter(section => section.items.length > 0);
   });
+  private menuItemsConfig: MenuItemConfig[] = [
+    { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+    { label: 'My Appraisal', icon: 'pi pi-file', route: '/employee/appraisal', roles: ['EMPLOYEE', 'MANAGER'] },
+    { label: 'Team Reviews', icon: 'pi pi-users', route: '/manager/reviews', roles: ['MANAGER'] },
+    { label: 'Cycle Management', icon: 'pi pi-calendar', route: '/hr/cycles', roles: ['HR'] },
+    { label: 'User Management', icon: 'pi pi-user-edit', route: '/admin/users', roles: ['ADMIN'] },
+    { label: 'Audit Logs', icon: 'pi pi-history', route: '/admin/audit', roles: ['ADMIN'] }
+  ];
+
+  get visibleMenuItems(): MenuItem[] {
+    if (!this.user) return [];
+    
+    const userRoles = this.user.roles.map(r => r.name);
+    return this.menuItemsConfig
+      .filter(item => item.roles.some(role => userRoles.includes(role as any)))
+      .map(item => ({
+        label: item.label,
+        icon: item.icon,
+        routerLink: item.route,
+        routerLinkActiveOptions: { exact: false }
+      }));
+  }
 }

@@ -1,61 +1,48 @@
-export interface EmployeeDashboard {
-  currentForm?: AppraisalFormSummary;
-  historicalForms: AppraisalFormSummary[];
+export interface EmployeeDashboardData {
+  totalForms: number;
+  pendingForms: number;
+  submittedForms: number;
+  completedForms: number;
 }
 
-export interface ManagerDashboard {
-  ownForm?: AppraisalFormSummary;
-  teamForms: TeamMemberForm[];
-  pendingReviews: number;
+export interface ManagerDashboardData {
+  totalTeamForms: number;
+  pendingReview: number;
   completedReviews: number;
   completionPercentage: number;
   /** Historical appraisal forms for the manager (read-only, Req 8.6) */
   historicalForms: AppraisalFormSummary[];
+  teamStats: TeamMemberStats[];
 }
 
-export interface HRDashboard {
-  activeCycle?: CycleSummary;
-  eligibleEmployees: number;
-  pendingSubmissions: number;
-  pendingReviews: number;
-  completedAppraisals: number;
-  departmentProgress: DepartmentProgress[];
+export interface HrDashboardData {
+  totalForms: number;
+  pendingEmployee: number;
+  pendingReview: number;
+  completed: number;
+  overallCompletion: number;
+  departmentStats: DepartmentStats[];
+  cycleStats: CycleStats[];
 }
 
-export interface AppraisalFormSummary {
-  id: number;
-  cycleName: string;
-  status: string;
-  submittedAt?: string;
-  reviewedAt?: string;
-  pdfAvailable: boolean;
-}
-
-export interface TeamMemberForm {
-  formId: number;
-  employeeId: number;
+export interface TeamMemberStats {
   employeeName: string;
   designation: string;
   department?: string;
   status: string;
-  submittedAt?: string;
+  formCount: number;
 }
 
-export interface CycleSummary {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
-
-export interface DepartmentProgress {
+export interface DepartmentStats {
   department: string;
-  totalEmployees: number;
-  completedAppraisals: number;
+  totalForms: number;
+  completedForms: number;
   completionPercentage: number;
 }
 
-// Re-export from appraisal.model for convenience
-import { FormStatus } from './appraisal.model';
-export { FormStatus };
+export interface CycleStats {
+  cycleName: string;
+  totalForms: number;
+  completedForms: number;
+  completionPercentage: number;
+}

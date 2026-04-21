@@ -1,7 +1,8 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 
 export interface ConfirmDialogData {
   title: string;
@@ -13,38 +14,48 @@ export interface ConfirmDialogData {
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  imports: [CommonModule, DialogModule, ButtonModule],
   template: `
-    <h2 mat-dialog-title>{{ data.title }}</h2>
-    <mat-dialog-content>
+    <div class="confirm-dialog">
       <p>{{ data.message }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">
-        {{ data.cancelText || 'Cancel' }}
-      </button>
-      <button mat-raised-button color="primary" (click)="onConfirm()">
-        {{ data.confirmText || 'Confirm' }}
-      </button>
-    </mat-dialog-actions>
+      <div class="dialog-actions">
+        <p-button [label]="data.cancelText || 'Cancel'" 
+                  icon="pi pi-times" 
+                  (onClick)="onCancel()" 
+                  styleClass="p-button-text"></p-button>
+        <p-button [label]="data.confirmText || 'Confirm'" 
+                  icon="pi pi-check" 
+                  (onClick)="onConfirm()"></p-button>
+      </div>
+    </div>
   `,
   styles: [`
-    mat-dialog-content {
+    .confirm-dialog {
       min-width: 300px;
+    }
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
     }
   `]
 })
 export class ConfirmDialogComponent {
+  data: ConfirmDialogData;
+
   constructor(
-    public dialogRef: MatDialogRef<ConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ConfirmDialogData
-  ) {}
+    public ref: DynamicDialogRef,
+    public config: DynamicDialogConfig
+  ) {
+    this.data = config.data;
+  }
 
   onConfirm(): void {
-    this.dialogRef.close(true);
+    this.ref.close(true);
   }
 
   onCancel(): void {
-    this.dialogRef.close(false);
+    this.ref.close(false);
   }
 }
