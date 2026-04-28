@@ -352,9 +352,10 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
     };
 
     if (this.keyResponsibilitiesItems.length > 0) {
+      const krMap = new Map((this.formData.keyResponsibilities || []).map(i => [i.itemId, i]));
       controls['keyResponsibilities'] = new FormArray(
-        this.keyResponsibilitiesItems.map((item, idx) => {
-          const existing = this.formData.keyResponsibilities?.[idx];
+        this.keyResponsibilitiesItems.map((item) => {
+          const existing = krMap.get(item.id);
           return new FormGroup({
             itemId:      new FormControl(item.id),
             selfComment: new FormControl(existing?.selfComment || ''),
@@ -367,9 +368,10 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
     }
 
     if (this.idpItems.length > 0) {
+      const idpMap = new Map((this.formData.idp || []).map(i => [i.itemId, i]));
       controls['idp'] = new FormArray(
-        this.idpItems.map((item, idx) => {
-          const existing = this.formData.idp?.[idx];
+        this.idpItems.map((item) => {
+          const existing = idpMap.get(item.id);
           return new FormGroup({
             itemId:      new FormControl(item.id),
             selfComment: new FormControl(existing?.selfComment || ''),
@@ -382,9 +384,10 @@ export class ManagerSelfAppraisalComponent implements OnInit, OnDestroy {
     }
 
     if (this.goalsItems.length > 0) {
+      const goalsMap = new Map((this.formData.goals || []).map(i => [i.itemId, i]));
       controls['goals'] = new FormArray(
-        this.goalsItems.map((item, idx) => {
-          const existing = this.formData.goals?.[idx];
+        this.goalsItems.map((item) => {
+          const existing = goalsMap.get(item.id);
           return new FormGroup({
             itemId:      new FormControl(item.id),
             selfComment: new FormControl(existing?.selfComment || ''),

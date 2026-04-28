@@ -209,7 +209,7 @@ export class FormRendererService {
    */
   getRatingOptions(ratingScale: 'competency' | 'policy_1_10'): string[] | number[] {
     if (ratingScale === 'competency') {
-      return ['Excels', 'Exceeds', 'Meets', 'Developing'];
+      return ['EXCELS', 'EXCEEDS', 'MEETS', 'DEVELOPING'];
     } else {
       return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     }
@@ -220,10 +220,10 @@ export class FormRendererService {
    */
   getCompetencyRatingDescriptions(): Record<string, string> {
     return {
-      'Excels': 'Consistently exceeds expectations and demonstrates exceptional performance',
-      'Exceeds': 'Frequently exceeds expectations and shows strong performance',
-      'Meets': 'Consistently meets expectations and performs at expected level',
-      'Developing': 'Working toward meeting expectations, requires development'
+      'EXCELS': 'Consistently exceeds expectations and demonstrates exceptional performance',
+      'EXCEEDS': 'Frequently exceeds expectations and shows strong performance',
+      'MEETS': 'Consistently meets expectations and performs at expected level',
+      'DEVELOPING': 'Working toward meeting expectations, requires development'
     };
   }
 

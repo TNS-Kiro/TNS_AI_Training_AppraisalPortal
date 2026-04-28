@@ -393,11 +393,12 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
       })
     };
 
-    // Initialize Key Responsibilities
+    // Initialize Key Responsibilities — match by itemId for reliable data binding
     if (this.keyResponsibilitiesItems.length > 0) {
+      const krMap = new Map((this.formData.keyResponsibilities || []).map(i => [i.itemId, i]));
       const krArray = new FormArray(
-        this.keyResponsibilitiesItems.map((item, idx) => {
-          const existing = this.formData.keyResponsibilities?.[idx];
+        this.keyResponsibilitiesItems.map((item) => {
+          const existing = krMap.get(item.id);
           return new FormGroup({
             itemId: new FormControl(item.id),
             selfComment: new FormControl(existing?.selfComment || '', [Validators.required]),
@@ -410,11 +411,12 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
       controls.keyResponsibilities = krArray;
     }
 
-    // Initialize IDP
+    // Initialize IDP — match by itemId
     if (this.idpItems.length > 0) {
+      const idpMap = new Map((this.formData.idp || []).map(i => [i.itemId, i]));
       const idpArray = new FormArray(
-        this.idpItems.map((item, idx) => {
-          const existing = this.formData.idp?.[idx];
+        this.idpItems.map((item) => {
+          const existing = idpMap.get(item.id);
           return new FormGroup({
             itemId: new FormControl(item.id),
             selfComment: new FormControl(existing?.selfComment || '', [Validators.required]),
@@ -427,11 +429,12 @@ export class SelfAppraisalFormComponent implements OnInit, OnDestroy {
       controls.idp = idpArray;
     }
 
-    // Initialize Goals
+    // Initialize Goals — match by itemId
     if (this.goalsItems.length > 0) {
+      const goalsMap = new Map((this.formData.goals || []).map(i => [i.itemId, i]));
       const goalsArray = new FormArray(
-        this.goalsItems.map((item, idx) => {
-          const existing = this.formData.goals?.[idx];
+        this.goalsItems.map((item) => {
+          const existing = goalsMap.get(item.id);
           return new FormGroup({
             itemId: new FormControl(item.id),
             selfComment: new FormControl(existing?.selfComment || '', [Validators.required]),

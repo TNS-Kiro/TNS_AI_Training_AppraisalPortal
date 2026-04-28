@@ -40,8 +40,8 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
             <mat-form-field appearance="outline">
               <mat-label>Self Rating</mat-label>
               <mat-select formControlName="selfRating">
-                <mat-option *ngFor="let rating of ratingOptions" [value]="rating">
-                  {{ rating }}
+                <mat-option *ngFor="let rating of ratingOptions" [value]="rating.value">
+                  {{ rating.label }}
                 </mat-option>
               </mat-select>
               <mat-error *ngIf="getItemFormGroup(i).get('selfRating')?.hasError('required')">
@@ -61,8 +61,8 @@ import { RenderedItem, FieldEditability } from '../form-renderer.models';
             <mat-form-field appearance="outline">
               <mat-label>Manager Rating</mat-label>
               <mat-select formControlName="managerRating">
-                <mat-option *ngFor="let rating of ratingOptions" [value]="rating">
-                  {{ rating }}
+                <mat-option *ngFor="let rating of ratingOptions" [value]="rating.value">
+                  {{ rating.label }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -127,7 +127,12 @@ export class KeyResponsibilitiesSectionComponent {
   @Input() canEditSelf: boolean = false;
   @Input() canEditManager: boolean = false;
 
-  ratingOptions = ['Excels', 'Exceeds', 'Meets', 'Developing'];
+  ratingOptions = [
+    { value: 'EXCELS',     label: 'Excels' },
+    { value: 'EXCEEDS',    label: 'Exceeds' },
+    { value: 'MEETS',      label: 'Meets' },
+    { value: 'DEVELOPING', label: 'Developing' }
+  ];
 
   get itemsFormArray(): FormArray {
     return this.formGroup.get('keyResponsibilities') as FormArray;
