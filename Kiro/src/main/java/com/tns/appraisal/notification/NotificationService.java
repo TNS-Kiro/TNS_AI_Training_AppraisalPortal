@@ -11,6 +11,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.tns.appraisal.user.UserRepository;
 
 import java.time.Instant;
 import java.util.Map;
@@ -29,13 +30,66 @@ public class NotificationService {
     private final JavaMailSender mailSender;
     private final NotificationTemplateRepository templateRepository;
     private final EmailNotificationLogRepository logRepository;
+    private final UserRepository userRepository;
 
     public NotificationService(JavaMailSender mailSender,
                               NotificationTemplateRepository templateRepository,
-                              EmailNotificationLogRepository logRepository) {
+                              EmailNotificationLogRepository logRepository,
+                              UserRepository userRepository) {
         this.mailSender = mailSender;
         this.templateRepository = templateRepository;
         this.logRepository = logRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Send the 3 review-completion notifications required by Property 13:
+     * one each to the employee, the manager, and HR.
+     * All sends are async and failures are logged without throwing.
+     *
+     * @param formId     the completed form ID
+     * @param employeeId the employee's user ID
+     * @param managerId  the manager's user ID
+     * @param pdfPath    the generated PDF storage path (may be null)
+     */
+    @Async
+    public void sendReviewCompletionNotifications(Long formId, Long employeeId,
+                                                  Long managerId, String pdfPath) {
+        Map<String, String> placeholders = Map.of(
+                "formId",    String.valueOf(formId),
+                "employeeId", String.valueOf(employeeId),
+                "managerId",  String.valueOf(managerId),
+                "pdfPath",    pdfPath != null ? pdfPath : ""
+        );
+
+        // Notify employee
+        sendNotificationToUserId(employeeId, "REVIEW_COMPLETED", placeholders);
+        // Notify manager
+        sendNotificationToUserId(managerId, "REVIEW_COMPLETED", placeholders);
+        // Notify HR (broadcast to all HR users via a fixed HR notification address)
+        sendNotificationAsync("REVIEW_COMPLETED", "hr@tns.com", placeholders);
+
+        logger.info("Review completion notifications dispatched for formId={}", formId);
+    }
+
+    /**
+     * Look up a user's email by ID and send a notification.
+     * Silently skips if the user or their email cannot be resolved.
+     */
+    private void sendNotificationToUserId(Long userId, String triggerEvent,
+                                          Map<String, String> placeholders) {
+        try {
+            String email = userRepository.findById(userId)
+                    .map(u -> u.getEmail())
+                    .orElse(null);
+            if (email != null) {
+                sendNotificationAsync(triggerEvent, email, placeholders);
+            } else {
+                logger.warn("Could not resolve email for userId={}, skipping notification", userId);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send notification to userId={}", userId, e);
+        }
     }
 
     /**

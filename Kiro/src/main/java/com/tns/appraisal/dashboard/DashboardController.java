@@ -4,66 +4,83 @@ import com.tns.appraisal.common.dto.ApiResponse;
 import com.tns.appraisal.form.AppraisalForm;
 import com.tns.appraisal.form.AppraisalFormRepository;
 import com.tns.appraisal.form.FormStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * REST controller exposing dashboard endpoints for Employee, Manager, and HR roles.
+ * Delegates all data aggregation to DashboardService.
+ */
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
 
     private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
 
+    private final DashboardService dashboardService;
     private final AppraisalFormRepository formRepository;
 
-    public DashboardController(AppraisalFormRepository formRepository) {
+    public DashboardController(DashboardService dashboardService,
+                               AppraisalFormRepository formRepository) {
+        this.dashboardService = dashboardService;
         this.formRepository = formRepository;
     }
 
+    // ── HR Endpoints ──────────────────────────────────────────────────────────
+
     @GetMapping("/hr")
     @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getHRDashboard() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("activeCycle", null);
-        data.put("eligibleEmployees", 0);
-        data.put("pendingSubmissions", 0);
-        data.put("pendingReviews", 0);
-        data.put("completedAppraisals", 0);
-        data.put("departmentProgress", Collections.emptyList());
-        return ResponseEntity.ok(ApiResponse.success(data));
+    public ResponseEntity<ApiResponse<DashboardService.HrDashboardData>> getHrDashboard() {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getHrDashboard()));
     }
 
-    @GetMapping("/employee")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getEmployeeDashboard(Authentication auth) {
-        Long userId = Long.parseLong(auth.getName());
-        logger.info("Loading employee dashboard for user {}", userId);
-
-        List<AppraisalForm> forms = formRepository.findByEmployeeIdWithRelations(userId);
-
-        AppraisalForm currentForm = forms.stream()
-            .filter(f -> f.getStatus() != FormStatus.REVIEWED_AND_COMPLETED)
-            .findFirst()
-            .orElse(null);
-
-        List<Map<String, Object>> historicalForms = forms.stream()
-            .map(this::toFormSummaryMap)
-            .collect(Collectors.toList());
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("currentForm", currentForm != null ? toFormSummaryMap(currentForm) : null);
-        data.put("historicalForms", historicalForms);
-        return ResponseEntity.ok(ApiResponse.success(data));
+    @GetMapping("/hr/employees")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<DashboardService.EmployeeFormStatus>>> getEmployeeList(
+            @RequestParam(required = false) Long cycleId) {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getEmployeeFormStatusList(cycleId)));
     }
 
+    @GetMapping("/hr/cycles")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<DashboardService.CycleSummary>>> getAllCycles() {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getAllCycles()));
+    }
+
+    @GetMapping("/hr/forms/{formId}")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<DashboardService.FormDetail>> getFormDetail(
+            @PathVariable Long formId) {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getFormDetail(formId)));
+    }
+
+    @GetMapping("/hr/export")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    public void exportCsv(@RequestParam(required = false) Long cycleId,
+                          HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition", "attachment; filename=\"appraisal-report.csv\"");
+        PrintWriter writer = response.getWriter();
+        dashboardService.exportToCsv(cycleId, writer);
+        writer.flush();
+    }
+
+    // ── Manager Endpoints ─────────────────────────────────────────────────────
+
+    /**
+     * Manager dashboard: returns own form + team forms + stats.
+     * User ID is derived from the authenticated session.
+     */
     @GetMapping("/manager")
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getManagerDashboard(Authentication auth) {
@@ -73,8 +90,7 @@ public class DashboardController {
         List<AppraisalForm> ownForms = formRepository.findByEmployeeIdWithRelations(userId);
         AppraisalForm ownForm = ownForms.stream()
             .filter(f -> f.getStatus() != FormStatus.REVIEWED_AND_COMPLETED)
-            .findFirst()
-            .orElse(null);
+            .findFirst().orElse(null);
 
         List<AppraisalForm> teamForms = formRepository.findByManager_Id(userId);
 
@@ -98,6 +114,45 @@ public class DashboardController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
+    // ── Employee Endpoints ────────────────────────────────────────────────────
+
+    /**
+     * Employee dashboard: returns current active form + all historical forms.
+     * User ID is derived from the authenticated session.
+     */
+    @GetMapping("/employee")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getEmployeeDashboard(Authentication auth) {
+        Long userId = Long.parseLong(auth.getName());
+        logger.info("Loading employee dashboard for user {}", userId);
+
+        List<AppraisalForm> forms = formRepository.findByEmployeeIdWithRelations(userId);
+
+        // Current form = most recent non-completed form
+        AppraisalForm currentForm = forms.stream()
+            .filter(f -> f.getStatus() != FormStatus.REVIEWED_AND_COMPLETED)
+            .findFirst().orElse(null);
+
+        List<Map<String, Object>> historicalForms = forms.stream()
+            .map(this::toFormSummaryMap)
+            .collect(Collectors.toList());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("currentForm", currentForm != null ? toFormSummaryMap(currentForm) : null);
+        data.put("historicalForms", historicalForms);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    // ── Shared ────────────────────────────────────────────────────────────────
+
+    @GetMapping("/status-distribution")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getStatusDistribution() {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getStatusDistribution()));
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private Map<String, Object> toFormSummaryMap(AppraisalForm form) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", form.getId());
@@ -114,55 +169,5 @@ public class DashboardController {
         map.put("createdAt", form.getCreatedAt());
         map.put("updatedAt", form.getUpdatedAt());
         return map;
-    private final DashboardService dashboardService;
-
-    public DashboardController(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
-    }
-
-    @GetMapping("/hr")
-    public ResponseEntity<ApiResponse<HrDashboardData>> getHrDashboard() {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getHrDashboard()));
-    }
-
-    @GetMapping("/hr/employees")
-    public ResponseEntity<ApiResponse<List<EmployeeFormStatus>>> getEmployeeList(
-            @RequestParam(required = false) Long cycleId) {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getEmployeeFormStatusList(cycleId)));
-    }
-
-    @GetMapping("/hr/cycles")
-    public ResponseEntity<ApiResponse<List<CycleSummary>>> getAllCycles() {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getAllCycles()));
-    }
-
-    @GetMapping("/hr/forms/{formId}")
-    public ResponseEntity<ApiResponse<FormDetail>> getFormDetail(@PathVariable Long formId) {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getFormDetail(formId)));
-    }
-
-    @GetMapping("/hr/export")
-    public void exportCsv(@RequestParam(required = false) Long cycleId,
-                          HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setHeader("Content-Disposition", "attachment; filename=\"appraisal-report.csv\"");
-        PrintWriter writer = response.getWriter();
-        dashboardService.exportToCsv(cycleId, writer);
-        writer.flush();
-    }
-
-    @GetMapping("/manager/{managerId}")
-    public ResponseEntity<ApiResponse<ManagerDashboardData>> getManagerDashboard(@PathVariable Long managerId) {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getManagerDashboard(managerId)));
-    }
-
-    @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<ApiResponse<EmployeeDashboardData>> getEmployeeDashboard(@PathVariable Long employeeId) {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getEmployeeDashboard(employeeId)));
-    }
-
-    @GetMapping("/status-distribution")
-    public ResponseEntity<ApiResponse<Map<String, Long>>> getStatusDistribution() {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getStatusDistribution()));
     }
 }

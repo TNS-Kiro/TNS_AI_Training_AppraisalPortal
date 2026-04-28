@@ -4,6 +4,13 @@ import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
 
+  // Default redirect
+  {
+    path: '',
+    redirectTo: '/login',
+    pathMatch: 'full'
+  },
+
   // Public: Login
   {
     path: 'login',
@@ -100,6 +107,20 @@ export const routes: Routes = [
     loadComponent: () => import('./features/hr/template-viewer/template-viewer.component').then(m => m.TemplateViewerComponent)
   },
 
+  // ── Phase 4: HR Notification & Reporting ─────────────────────────────────
+  {
+    path: 'hr/notifications/logs',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/notification-log-viewer.component').then(m => m.NotificationLogViewerComponent)
+  },
+  {
+    path: 'hr/notifications/templates',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['HR', 'ADMIN'] },
+    loadComponent: () => import('./features/hr/notification-template-list.component').then(m => m.NotificationTemplateListComponent)
+  },
+
   // ── Admin ─────────────────────────────────────────────────────────────────
   {
     path: 'admin/users',
@@ -114,25 +135,9 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/audit-log-viewer.component').then(m => m.AuditLogViewerComponent)
   },
 
-  // Phase 4 Features
+  // Catch-all — MUST be last
   {
     path: '**',
-    redirectTo: '/login',
-    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
-  },
-  {
-    path: 'hr/dashboard',
-    loadComponent: () => import('./features/hr/hr-dashboard.component').then(m => m.HrDashboardComponent),
-    canActivate: [authGuard]
-  },
-  {
-    path: 'hr/notifications/logs',
-    loadComponent: () => import('./features/hr/notification-log-viewer.component').then(m => m.NotificationLogViewerComponent),
-    canActivate: [authGuard]
-  },
-  {
-    path: 'hr/notifications/templates',
-    loadComponent: () => import('./features/hr/notification-template-list.component').then(m => m.NotificationTemplateListComponent),
-    canActivate: [authGuard]
+    redirectTo: '/login'
   }
 ];

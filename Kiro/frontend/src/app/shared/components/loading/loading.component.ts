@@ -1,20 +1,18 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-loading',
   standalone: true,
-  imports: [CommonModule, ProgressSpinnerModule],
+  imports: [CommonModule, MatProgressSpinnerModule],
   template: `
-    @if (isLoading) {
-      <div class="loading-overlay">
-        <p-progressSpinner [style]="{ width: diameter + 'px', height: diameter + 'px' }"></p-progressSpinner>
-        @if (message) {
-          <p class="loading-message">{{ message }}</p>
-        }
-      </div>
-    }
+    <div class="loading-overlay">
+      <mat-spinner [diameter]="diameter"></mat-spinner>
+      @if (message) {
+        <p class="loading-message">{{ message }}</p>
+      }
+    </div>
   `,
   styles: [`
     .loading-overlay {
@@ -31,7 +29,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
   `]
 })
 export class LoadingComponent {
-  @Input() isLoading = false;
+  @Input() isLoading = true;
   @Input() message?: string;
   @Input() diameter = 50;
 }

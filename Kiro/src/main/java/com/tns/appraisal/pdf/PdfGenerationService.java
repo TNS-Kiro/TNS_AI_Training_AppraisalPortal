@@ -38,6 +38,34 @@ public class PdfGenerationService {
     private String pdfStoragePath;
 
     /**
+     * Generate PDF for a completed AppraisalForm and save to disk.
+     * Called by ReviewService.completeReview() — satisfies Property 16.
+     *
+     * @param form the completed appraisal form
+     * @return the file path where the PDF was stored
+     */
+    public String generateAndStore(com.tns.appraisal.form.AppraisalForm form) {
+        try {
+            String employeeName = form.getEmployee() != null ? form.getEmployee().getFullName() : "Employee";
+            String reviewerName = form.getManager() != null ? form.getManager().getFullName() : "Manager";
+            String cycleName = "Appraisal Cycle";
+
+            // Convert FormData to a generic map for the PDF renderer
+            Map<String, Object> formDataMap = new java.util.LinkedHashMap<>();
+            if (form.getFormData() != null) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                formDataMap = mapper.convertValue(form.getFormData(), new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            }
+
+            return generateAppraisalPdf(form.getId(), formDataMap, employeeName, reviewerName,
+                    form.getReviewedAt() != null ? form.getReviewedAt() : Instant.now());
+        } catch (Exception e) {
+            logger.error("generateAndStore failed for formId={}", form.getId(), e);
+            throw new RuntimeException("PDF generation failed for form " + form.getId(), e);
+        }
+    }
+
+    /**
      * Generate PDF in memory and return as byte array (no file storage needed).
      */
     public byte[] generateAppraisalPdfBytes(Long formId, Map<String, Object> formData,

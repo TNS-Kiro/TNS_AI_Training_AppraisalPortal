@@ -38,10 +38,12 @@ const NAV_SECTIONS: NavSection[] = [
   {
     heading: 'HR',
     items: [
-      { label: 'HR Dashboard',      icon: 'groups',              route: '/hr',               roles: ['HR'] },
-      { label: 'Cycle Management',  icon: 'event',               route: '/hr/cycles',        roles: ['HR', 'ADMIN'] },
-      { label: 'Templates',         icon: 'description',         route: '/hr/templates',     roles: ['HR', 'ADMIN'] },
-      { label: 'View Appraisals',   icon: 'assignment',          route: '/employee/history', roles: ['HR'] },
+      { label: 'HR Dashboard',           icon: 'groups',              route: '/hr',                          roles: ['HR'] },
+      { label: 'Cycle Management',       icon: 'event',               route: '/hr/cycles',                   roles: ['HR', 'ADMIN'] },
+      { label: 'Templates',              icon: 'description',         route: '/hr/templates',                roles: ['HR', 'ADMIN'] },
+      { label: 'View Appraisals',        icon: 'assignment',          route: '/employee/history',            roles: ['HR'] },
+      { label: 'Notification Logs',      icon: 'email',               route: '/hr/notifications/logs',       roles: ['HR', 'ADMIN'] },
+      { label: 'Notification Templates', icon: 'mark_email_read',     route: '/hr/notifications/templates',  roles: ['HR', 'ADMIN'] },
     ]
   },
   {
@@ -180,27 +182,5 @@ export class SidebarComponent {
         )
       }))
       .filter(section => section.items.length > 0);
-  });
-  private menuItemsConfig: MenuItemConfig[] = [
-    { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-    { label: 'My Appraisal', icon: 'pi pi-file', route: '/employee/appraisal', roles: ['EMPLOYEE', 'MANAGER'] },
-    { label: 'Team Reviews', icon: 'pi pi-users', route: '/manager/reviews', roles: ['MANAGER'] },
-    { label: 'Cycle Management', icon: 'pi pi-calendar', route: '/hr/cycles', roles: ['HR'] },
-    { label: 'User Management', icon: 'pi pi-user-edit', route: '/admin/users', roles: ['ADMIN'] },
-    { label: 'Audit Logs', icon: 'pi pi-history', route: '/admin/audit', roles: ['ADMIN'] }
-  ];
-
-  get visibleMenuItems(): MenuItem[] {
-    if (!this.user) return [];
-    
-    const userRoles = this.user.roles.map(r => r.name);
-    return this.menuItemsConfig
-      .filter(item => item.roles.some(role => userRoles.includes(role as any)))
-      .map(item => ({
-        label: item.label,
-        icon: item.icon,
-        routerLink: item.route,
-        routerLinkActiveOptions: { exact: false }
-      }));
-  }
+});
 }

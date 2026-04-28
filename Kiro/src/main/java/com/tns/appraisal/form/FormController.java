@@ -5,8 +5,6 @@ import com.tns.appraisal.form.dto.FormDetailDto;
 import com.tns.appraisal.form.dto.FormSummaryDto;
 import com.tns.appraisal.form.dto.SaveDraftRequest;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -130,42 +128,6 @@ public class FormController {
         Long userId = getUserId(auth);
         FormDetailDto dto = formService.submitForm(id, userId);
         return ResponseEntity.ok(ApiResponse.success("Form submitted successfully", dto));
-    }
-
-    // -------------------------------------------------------------------------
-    // GET /api/forms/{id}/pdf  – Employee (own), Manager, HR
-    // -------------------------------------------------------------------------
-
-    /**
-     * Downloads the PDF for a completed appraisal form.
-     * Returns 404 if the PDF has not been generated yet.
-     */
-    @GetMapping("/{id}/pdf")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'HR', 'ADMIN')")
-    public ResponseEntity<byte[]> downloadPdf(
-            @PathVariable Long id,
-            Authentication auth) {
-        Long userId = getUserId(auth);
-        Set<String> roles = getRoles(auth);
-
-        // Verify access — reuse getFormById which enforces ownership/role checks
-        FormDetailDto dto = formService.getFormById(id, userId, roles);
-
-        String pdfPath = dto.getPdfStoragePath();
-        if (pdfPath == null || pdfPath.isBlank()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // PDF serving: return the stored path as a redirect or serve bytes.
-        // For now, return 204 No Content with the path header until PdfGenerationService
-        // is wired in (task 3.x). The path is available for the frontend to use.
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment",
-            "appraisal-form-" + id + ".pdf");
-        headers.add("X-PDF-Path", pdfPath);
-
-        return ResponseEntity.noContent().headers(headers).build();
     }
 
     // -------------------------------------------------------------------------

@@ -5,6 +5,9 @@ export interface EmployeeDashboardData {
   completedForms: number;
 }
 
+/** Alias used by DashboardService and EmployeeDashboardComponent */
+export type EmployeeDashboard = EmployeeDashboardData;
+
 export interface ManagerDashboardData {
   totalTeamForms: number;
   pendingReview: number;
@@ -14,6 +17,9 @@ export interface ManagerDashboardData {
   historicalForms: AppraisalFormSummary[];
   teamStats: TeamMemberStats[];
 }
+
+/** Alias used by DashboardService and ManagerDashboardComponent */
+export type ManagerDashboard = ManagerDashboardData;
 
 export interface HrDashboardData {
   totalForms: number;
@@ -25,12 +31,38 @@ export interface HrDashboardData {
   cycleStats: CycleStats[];
 }
 
+/** Alias used by DashboardService and CycleDashboardComponent */
+export type HRDashboard = HrDashboardData;
+
+/** Department progress — alias for CycleDashboardComponent */
+export type DepartmentProgress = DepartmentStats;
+
 export interface TeamMemberStats {
   employeeName: string;
   designation: string;
   department?: string;
   status: string;
   formCount: number;
+}
+
+/** Form entry for a team member — used by TeamAppraisalListComponent */
+export interface TeamMemberForm {
+  formId: number;
+  employeeId: number;
+  employeeName: string;
+  designation: string;
+  department?: string;
+  status: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+}
+
+export interface AppraisalFormSummary {
+  id: number;
+  cycleId: number;
+  status: string;
+  submittedAt?: string;
+  reviewedAt?: string;
 }
 
 export interface DepartmentStats {
