@@ -1,0 +1,8 @@
+target
+.git
+.idea
+*.md
+*.log
+frontend
+dev-appraisal-pdfs
+test-output*.txt

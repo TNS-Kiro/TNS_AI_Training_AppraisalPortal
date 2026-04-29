@@ -1,0 +1,72 @@
+version: '3.9'
+
+services:
+
+  # ─── Backend: Spring Boot API ─────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: appraisal-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:sqlserver://${DB_HOST:-db}:1433;databaseName=${DB_NAME:-AppraisalDB};encrypt=true;trustServerCertificate=true
+      DB_USERNAME: ${DB_USERNAME:-sa}
+      DB_PASSWORD: ${DB_PASSWORD:-YourStrong@Passw0rd}
+      MAIL_HOST: ${MAIL_HOST:-mailhog}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-noreply@thinknsolutions.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      PDF_STORAGE_PATH: /app/appraisal-pdfs
+    volumes:
+      - pdf_storage:/app/appraisal-pdfs
+    ports:
+      - "8080:8080"
+    networks:
+      - appraisal-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─── Frontend: Angular + Express ──────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: appraisal-frontend
+    restart: unless-stopped
+    environment:
+      PORT: 4200
+      API_URL: http://backend:8080
+    ports:
+      - "4200:4200"
+    networks:
+      - appraisal-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ─── Mail: MailHog (dev/staging only — remove in prod) ────────────────────
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: appraisal-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - appraisal-net
+    profiles:
+      - dev
+
+volumes:
+  pdf_storage:
+    driver: local
+
+networks:
+  appraisal-net:
+    driver: bridge
