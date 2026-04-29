@@ -1,50 +1,190 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Full-Stack Application Constitution (Angular 21 + Java 21)
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Standalone-First Frontend Architecture
+- Angular MUST use standalone components (no NgModules).
+- Application structure is feature-based, not layer-based.
+- Each feature:
+  - Owns its components, services, routes, and state
+  - Is lazy-loadable by default
+- Shared logic must live in clearly defined shared libraries.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+---
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. API-First & Contract-Driven Development
+- Backend APIs MUST be defined using OpenAPI (Swagger) before implementation.
+- Frontend integrates strictly via typed API clients (generated or strongly typed).
+- Breaking API changes require versioning (`/api/v1`, `/api/v2`).
+- No undocumented endpoints allowed.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+---
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Test-First Development (NON-NEGOTIABLE)
+- TDD workflow enforced:
+  1. Write tests
+  2. Confirm failing
+  3. Implement
+  4. Refactor
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+#### Frontend (Angular 21)
+- Unit tests: Jest (preferred) or Karma
+- Component tests: Angular Testing Library
+- E2E: Playwright or Cypress
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+#### Backend (Java 21)
+- Unit tests: JUnit 5
+- Mocking: Mockito
+- Integration: Spring Boot Test / Testcontainers
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+---
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### IV. Reactive & Asynchronous Design
+#### Frontend
+- Use Signals (preferred) or RxJS where appropriate
+- Avoid manual subscriptions when Signals can be used
+- State must be predictable and traceable
+
+#### Backend
+- Prefer virtual threads (Project Loom, Java 21) for scalability
+- Use asynchronous processing where beneficial
+- Avoid blocking I/O where possible
+
+---
+
+### V. Integration & Contract Testing
+- Mandatory for:
+  - API contracts
+  - Frontend ↔ Backend integration
+  - Database migrations
+
+- Tools:
+  - Spring Cloud Contract / REST Assured
+  - Testcontainers for DB realism
+  - Mock API layer in Angular
+
+---
+
+### VI. Observability & Diagnostics
+#### Backend
+- Structured logging (SLF4J + Logback)
+- Distributed tracing (OpenTelemetry)
+- Metrics (Micrometer + Prometheus)
+
+#### Frontend
+- Centralized error handling
+- Logging via interceptors
+- Optional monitoring (Sentry / similar)
+
+---
+
+### VII. Versioning & Backward Compatibility
+- Backend: Semantic Versioning
+- APIs: Versioned endpoints
+- Frontend must handle backward compatibility gracefully
+- Breaking changes require:
+  - Migration guide
+  - Deprecation window
+
+---
+
+### VIII. Simplicity & Performance
+- Follow YAGNI and KISS principles
+- Prefer built-in Angular/Java features over heavy libraries
+- Performance budgets:
+  - Angular bundle size must be monitored
+  - Backend response times must meet SLAs
+
+---
+
+## Technology & Architecture Constraints
+
+### Frontend (Angular 21)
+- Standalone APIs ONLY
+- Signals for state (preferred over RxJS where applicable)
+- Functional guards and resolvers
+- Strict TypeScript mode enabled
+- ESLint + Prettier enforced
+
+### Backend (Java 21)
+- Spring Boot 3+
+- Virtual Threads enabled where applicable
+- Spring Data JPA / Hibernate OR reactive stack (if chosen)
+- Database: PostgreSQL (preferred)
+- Build: Maven or Gradle
+
+---
+
+### Security Requirements
+- Authentication: OAuth2 / JWT
+- Authorization: Role-based (RBAC)
+- Input validation required on all endpoints
+- HTTPS enforced everywhere
+- Sensitive data must never be logged
+
+---
+
+## Development Workflow
+
+### Branch Naming (MANDATORY)
+- Must follow:
+  - `001-feature-name`
+  - `002-bugfix-name`
+  - `YYYYMMDD-description`
+
+- Invalid branch names BLOCK all SpecKit operations.
+
+---
+
+### SpecKit Workflow (MANDATORY)
+1. `/speckit.specify`
+2. `/speckit.plan`
+3. `/speckit.tasks`
+4. `/speckit.analyze`
+
+- No implementation before tasks.md exists
+- Brownfield extensions must run before analysis (if configured)
+
+---
+
+### Code Review & Quality Gates
+- PR requirements:
+  - All tests passing
+  - Linting clean
+  - Reviewed by at least one developer
+
+- CI must enforce:
+  - Build success
+  - Coverage thresholds
+  - Static analysis
+
+---
+
+### Deployment
+- Independent deployment:
+  - Angular → CDN / Web server
+  - Java → Containerized (Docker)
+
+- Environments:
+  - Dev → Staging → Production
+
+- Feature flags encouraged
+
+---
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This Constitution overrides all informal practices
+- All changes must comply or be explicitly justified
+- Amendments require:
+  - Documentation
+  - Approval
+  - Migration strategy
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+- Complexity must always be justified
+
+---
+
+**Version**: 2.0.0  
+**Ratified**: 2026-04-29  
+**Last Amended**: 2026-04-29

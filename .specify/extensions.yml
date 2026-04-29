@@ -66,13 +66,6 @@ hooks:
     prompt: Commit outstanding changes before analysis?
     description: Auto-commit before analysis
     condition: null
-  - extension: brownfield
-    command: speckit.brownfield.scan
-    enabled: true
-    optional: false
-    prompt: Run brownfield scan before analysis?
-    description: Scan existing codebase to enrich analysis
-    condition: null    
   before_taskstoissues:
   - extension: git
     command: speckit.git.commit
@@ -152,12 +145,4 @@ hooks:
     optional: true
     prompt: Commit after syncing issues?
     description: Auto-commit after tasks-to-issues conversion
-    condition: null
-  after_init:
-  - extension: brownfield
-    command: speckit.brownfield.scan
-    enabled: true
-    optional: true
-    prompt: Scan this existing project to customize spec-kit configuration?
-    description: Auto-scan project after spec-kit init to detect tech stack and conventions
     condition: null
